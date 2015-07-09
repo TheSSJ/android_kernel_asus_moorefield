@@ -203,6 +203,13 @@ config CPU_FREQ_GOV_BIOSHOCK
 	help
 	credits to Jamison904
 
+config CPU_FREQ_GOV_CONSERVATIVEX
+	tristate "'conservativeX' cpufreq policy governor"
+	depends on CPU_FREQ	
+	default y	
+	help
+	A less aggressive version of conservative governor
+
 config CPU_FREQ_GOV_CONSERVATIVE
 	tristate "'conservative' cpufreq governor"
 	depends on CPU_FREQ
