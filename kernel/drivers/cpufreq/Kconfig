@@ -196,6 +196,13 @@ config CPU_FREQ_GOV_INTERACTIVE
 
 	  If in doubt, say N.
 
+config CPU_FREQ_GOV_BIOSHOCK
+	tristate "'bioshock' cpufreq policy governor"
+	depends on CPU_FREQ	
+	default y	
+	help
+	credits to Jamison904
+
 config CPU_FREQ_GOV_CONSERVATIVE
 	tristate "'conservative' cpufreq governor"
 	depends on CPU_FREQ
