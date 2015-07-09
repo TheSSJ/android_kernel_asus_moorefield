@@ -205,6 +205,7 @@ config CPU_FREQ_GOV_BIOSHOCK
 
 config CPU_FREQ_GOV_UMBRELLA_CORE
 	tristate "'umbrella_core' cpufreq policy governor"
+	default y	
 	help
 	'umbrella_core' - This driver adds a dynamic cpufreq policy governor
 	designed for latency-sensitive workloads.
@@ -239,6 +240,11 @@ config CPU_FREQ_GOV_CONSERVATIVE
 	  For details, take a look at linux/Documentation/cpu-freq.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_INTELLIACTIVE
+	tristate "'intelliactive' cpufreq policy governor"
+	depends on CPU_FREQ
+	default y
 
 config GENERIC_CPUFREQ_CPU0
 	tristate "Generic CPU0 cpufreq driver"
