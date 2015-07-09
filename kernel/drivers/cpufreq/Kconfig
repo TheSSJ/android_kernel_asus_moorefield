@@ -246,6 +246,13 @@ config CPU_FREQ_GOV_INTELLIACTIVE
 	depends on CPU_FREQ
 	default y
 
+config CPU_FREQ_GOV_LIONHEART
+	tristate "'lionheart' cpufreq governor"
+	depends on CPU_FREQ
+	default y
+	help
+	lionheart' - a "smart" optimized governor!
+
 config GENERIC_CPUFREQ_CPU0
 	tristate "Generic CPU0 cpufreq driver"
 	depends on HAVE_CLK && REGULATOR && PM_OPP && OF
