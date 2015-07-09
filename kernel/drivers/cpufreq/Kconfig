@@ -203,13 +203,6 @@ config CPU_FREQ_GOV_BIOSHOCK
 	help
 	credits to Jamison904
 
-config CPU_FREQ_GOV_UMBRELLA_CORE
-	tristate "'umbrella_core' cpufreq policy governor"
-	default y	
-	help
-	'umbrella_core' - This driver adds a dynamic cpufreq policy governor
-	designed for latency-sensitive workloads.
-
 config CPU_FREQ_GOV_CONSERVATIVEX
 	tristate "'conservativeX' cpufreq policy governor"
 	depends on CPU_FREQ	

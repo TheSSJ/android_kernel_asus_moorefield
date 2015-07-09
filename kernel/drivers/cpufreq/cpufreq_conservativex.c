@@ -24,6 +24,7 @@
 #include <linux/tick.h>
 #include <linux/ktime.h>
 #include <linux/sched.h>
+#include "cpufreq_wrapper.h"
 
 /*
  * dbs is used in this file as a shortform for demandbased switching
@@ -97,7 +98,7 @@ static struct dbs_tuners {
 	.ignore_nice = 0,
 	.freq_step = 5,
 };
-
+/*
 static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
 {
 	u64 idle_time;
@@ -119,7 +120,7 @@ static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
 
 	return jiffies_to_usecs(idle_time);
 }
-
+*/
 /* keep track of frequency transitions */
 static int
 dbs_cpufreq_notifier(struct notifier_block *nb, unsigned long val,

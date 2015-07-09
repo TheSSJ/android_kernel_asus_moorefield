@@ -45,6 +45,7 @@
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
 #endif
+#include "cpufreq_wrapper.h"
 
 #define DEF_FREQUENCY_UP_THRESHOLD		(65)
 #define DEF_FREQUENCY_DOWN_THRESHOLD		(30)
