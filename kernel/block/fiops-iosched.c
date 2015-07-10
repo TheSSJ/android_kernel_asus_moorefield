@@ -128,6 +128,14 @@ static inline struct fiops_ioc *fiops_cic_lookup(struct fiops_data *fiopsd,
 	return NULL;
 }
 
+static inline int task_ioprio(struct io_context *ioc)
+{
+         if (ioprio_valid(ioc->ioprio))
+                 return IOPRIO_PRIO_DATA(ioc->ioprio);
+ 
+         return IOPRIO_NORM;
+}
+
 /*
  * The below is leftmost cache rbtree addon
  */
