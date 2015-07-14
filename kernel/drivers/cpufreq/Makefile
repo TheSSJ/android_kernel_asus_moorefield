@@ -13,9 +13,10 @@ obj-$(CONFIG_CPU_FREQ_GOV_INTERACTIVE)	+= cpufreq_interactive.o
 obj-$(CONFIG_CPU_FREQ_GOV_COMMON)		+= cpufreq_governor.o
 obj-$(CONFIG_CPU_FREQ_GOV_BIOSHOCK)	+= cpufreq_bioshock.o
 obj-$(CONFIG_CPU_FREQ_GOV_CONSERVATIVEX)	+= cpufreq_conservativex.o
-#obj-$(CONFIG_CPU_FREQ_GOV_UMBRELLA_CORE)	+= cpufreq_umbrella_core.o
-obj-$(CONFIG_CPU_FREQ_GOV_INTELLIACTIVE)	+= cpufreq_intelliactive.o
+obj-$(CONFIG_CPU_FREQ_GOV_ONDEMANDPLUS)	+= cpufreq_ondemandplus.o
+obj-$(CONFIG_CPU_FREQ_GOV_ADAPTIVE)	+= cpufreq_adaptive.o
 obj-$(CONFIG_CPU_FREQ_GOV_LIONHEART)	+= cpufreq_lionheart.o
+obj-$(CONFIG_CPU_FREQ_GOV_YANKACTIVE)	+= cpufreq_yankactive.o
 
 # CPUfreq cross-arch helpers
 obj-$(CONFIG_CPU_FREQ_TABLE)		+= freq_table.o
