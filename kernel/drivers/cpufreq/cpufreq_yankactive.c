@@ -38,7 +38,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_yankactive.h>
 
-#define DEFAULT_HISPEED_FREQ	1728000
+#define DEFAULT_HISPEED_FREQ	2330000
 
 static int active_count;
 
@@ -1269,7 +1269,7 @@ static int cpufreq_governor_yankactive(struct cpufreq_policy *policy,
 		freq_table =
 			cpufreq_frequency_get_table(policy->cpu);
 		if (!hispeed_freq)
-			hispeed_freq = DEFAULT_HISPEED_FREQ;
+			hispeed_freq = policy->max; //changed to what the CPU can do
 
 		for_each_cpu(j, policy->cpus) {
 			pcpu = &per_cpu(cpuinfo, j);
