@@ -1379,7 +1379,9 @@ gov_sys_pol_attr_rw(min_sample_time);
 gov_sys_pol_attr_rw(timer_rate);
 gov_sys_pol_attr_rw(timer_slack);
 gov_sys_pol_attr_rw(boost);
+gov_sys_pol_attr_rw(boostpulse);
 gov_sys_pol_attr_rw(boostpulse_duration);
+gov_sys_pol_attr_rw(touchboostpulse);
 gov_sys_pol_attr_rw(touchboostpulse_duration);
 gov_sys_pol_attr_rw(io_is_busy);
 #ifdef CONFIG_IRQ_TIME_ACCOUNTING
@@ -1530,13 +1532,13 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 			return -ENOMEM;
 		}
 
-		rc = sysfs_create_group(get_governor_parent_kobj(policy),
+		/*rc = sysfs_create_group(get_governor_parent_kobj(policy),
 				get_sysfs_attr());
 		if (rc) {
 			kfree(tunables);
 			return rc;
 		}
-
+*/
 		tunables->usage_count = 1;
 		tunables->above_hispeed_delay = default_above_hispeed_delay;
 		tunables->nabove_hispeed_delay =
@@ -1561,16 +1563,30 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 		spin_lock_init(&tunables->target_loads_lock);
 		spin_lock_init(&tunables->above_hispeed_delay_lock);
 
+		policy->governor_data = tunables;
+		if (!have_governor_per_policy())
+			common_tunables = tunables;
+
+		rc = sysfs_create_group(get_governor_parent_kobj(policy),
+				get_sysfs_attr());
+		if (rc) {
+			kfree(tunables);
+			policy->governor_data = NULL;
+			if (!have_governor_per_policy())
+				common_tunables = NULL;
+			return rc;
+		}
+
 		if (!policy->governor->initialized) {
 			idle_notifier_register(&cpufreq_interactive_idle_nb);
 			cpufreq_register_notifier(&cpufreq_notifier_block,
 					CPUFREQ_TRANSITION_NOTIFIER);
 		}
 
-		policy->governor_data = tunables;
+/*		policy->governor_data = tunables;
 		if (!have_governor_per_policy())
 			common_tunables = tunables;
-
+*/
 		break;
 
 	case CPUFREQ_GOV_POLICY_EXIT:
