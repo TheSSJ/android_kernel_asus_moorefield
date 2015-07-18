@@ -182,6 +182,7 @@ config CPU_FREQ_GOV_ONDEMAND
 config CPU_FREQ_GOV_ONDEMANDPLUS
 	tristate "'ondemandplus' cpufreq policy governor"
 	depends on CPU_FREQ
+	default n
 	---help---
 	'ondemandplus' - This driver adds a dynamic cpufreq policy
 	governor. The governor does a periodic polling and

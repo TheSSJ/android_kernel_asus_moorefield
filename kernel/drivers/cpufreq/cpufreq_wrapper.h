@@ -3,6 +3,8 @@
 
 #include <linux/cpufreq.h>
 
+#define cputime64_sub(__a, __b)         ((__a) - (__b))
+
 static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
 {
 	u64 idle_time;

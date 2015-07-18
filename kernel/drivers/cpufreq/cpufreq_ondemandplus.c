@@ -1,4 +1,4 @@
-/*
+SU/*
  * drivers/cpufreq/cpufreq_ondemandplus.c
  * Copyright (C) 2013 Boy Petersen
  * Copyright (C) 2014 Kyriacos Elpidorou [for the Note 4 Adaptation]
