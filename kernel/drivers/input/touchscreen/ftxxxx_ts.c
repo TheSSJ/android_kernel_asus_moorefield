@@ -41,7 +41,6 @@
 #include <linux/proc_fs.h>
 #include <linux/wakelock.h>
 #include <asm/intel-mid.h>
-#include <linux/cpu.h>
 #include "ftxxxx_ts.h"
 #include "ftxxxx_ex_fun.h"
 
@@ -1541,20 +1540,11 @@ static void ftxxxx_ts_suspend(struct early_suspend *handler)
 
 	mutex_unlock(&ts->mutex_lock);
 	wake_unlock(&ts->wake_lock);
-	//Disable the non-boot CPUs
-	#ifdef CONFIG_PM_SLEEP_SMP
-	disable_nonboot_cpus();
-	#endif
 	return;
 }
 
 static void ftxxxx_ts_resume(struct early_suspend *handler)
 {
-	//Get CPUs back online:
-	#ifdef CONFIG_PM_SLEEP_SMP
-	enable_nonboot_cpus();
-	#endif
-	
 	struct ftxxxx_ts_data *ts = container_of(handler, struct ftxxxx_ts_data, early_suspend);
 
 	pr_info("[ftxxxx] ftxxxx ts late resume.\n");
@@ -1656,7 +1646,6 @@ static void ftxxxx_ts_resume(struct early_suspend *handler)
 
 	mutex_unlock(&ts->mutex_lock);
 	wake_unlock(&ts->wake_lock);
-	
 	return;
 }
 #else
