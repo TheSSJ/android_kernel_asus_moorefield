@@ -872,14 +872,14 @@ static int __init cpufreq_gov_dbs_init(void)
 	u64 idle_time;
 	int cpu = get_cpu();
 
-	struct sched_param param = { .sched_priority = 0 };
+	struct sched_param param = { .sched_priority = 99 };
 	go_maxspeed_load = DEFAULT_GO_MAXSPEED_LOAD;
 	keep_minspeed_load = DEFAULT_KEEP_MINSPEED_LOAD;
 	step_up_load = DEFAULT_STEPUP_LOAD;
 
 	idle_time = get_cpu_idle_time_us(cpu, &wall);
 	put_cpu();
-	if (idle_time != -1ULL) {
+	if (0) {
 		/* Idle micro accounting is supported. Use finer thresholds */
 		dbs_tuners_ins.up_threshold = MICRO_FREQUENCY_UP_THRESHOLD;
 		dbs_tuners_ins.down_differential =

@@ -179,18 +179,6 @@ config CPU_FREQ_GOV_ONDEMAND
 
 	  If in doubt, say N.
 
-config CPU_FREQ_GOV_ONDEMANDPLUS
-	tristate "'ondemandplus' cpufreq policy governor"
-	depends on CPU_FREQ
-	default n
-	---help---
-	'ondemandplus' - This driver adds a dynamic cpufreq policy
-	governor. The governor does a periodic polling and
-	changes frequency based on the CPU utilization.
-	The support for this governor depends on CPU capability to
-	do fast frequency switching (i.e, very low latency frequency
-	transitions).
-
 config CPU_FREQ_GOV_INTERACTIVE
 	tristate "'interactive' cpufreq policy governor"
 	help
@@ -213,6 +201,12 @@ config CPU_FREQ_GOV_BIOSHOCK
 	depends on CPU_FREQ	
 	help
 	credits to Jamison904
+
+config CPU_FREQ_GOV_THESSJACTIVE
+	tristate "'thessjactive' cpufreq policy governor"
+	depends on CPU_FREQ	
+	help
+	credits to TheSSJ
 
 config CPU_FREQ_GOV_CONSERVATIVEX
 	tristate "'conservativeX' cpufreq policy governor"

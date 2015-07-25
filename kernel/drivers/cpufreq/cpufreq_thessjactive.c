@@ -36,6 +36,8 @@
 #include <asm/cputime.h>
 
 //for adding early suspend and late resume handlers
+//easy debug switch
+//#define GOVDEBUG
 #include <linux/earlysuspend.h>
 #include <linux/wait.h>
 
@@ -138,8 +140,9 @@ static struct attribute_group *get_sysfs_attr(void);
 
 static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 {
+	#ifdef GOVDEBUG
 	printk("entered early_suspend handler in thessjactive");
-	/*
+	#else
 	unsigned int cpu;
 	for_each_possible_cpu(cpu)
 	{
@@ -148,21 +151,23 @@ static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 		
 		if (cpu_online(cpu) && num_online_cpus() > 2) //get 2 cores down, cores 3 and 4 
 			cpu_down(cpu);
-	}*/
+	}
+	#endif
 }
 
 static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
 {
+	#ifdef GOVDEBUG
 	printk("entered late_resume handler in thessjactive");
-	/*
+	#else
 	unsigned int cpu;
 	
 	for_each_possible_cpu(cpu)
 	{
-			if (!cpu_online(cpu) && num_online_cpus() < 4) //get all up 
+		if (!cpu_online(cpu) && num_online_cpus() < 4) //get all up 
 			cpu_up(cpu);
 	}
-	*/
+	#endif
 }
 
 static struct early_suspend hotplug_auxcpus_desc __refdata = {
@@ -1591,12 +1596,13 @@ static void __exit cpufreq_thessjactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_thessjactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
-	//destroy_workqueue(khotplug_wq);
 }
 
 module_exit(cpufreq_thessjactive_exit);
 
 MODULE_AUTHOR("Mike Chan <mike@android.com>");
+MODULE_AUTHOR("Yank555-lu");
+MODULE_AUTHOR("TheSSJ");
 MODULE_DESCRIPTION("'cpufreq_thessjactive' - A cpufreq governor for "
 	"Latency sensitive workloads");
 MODULE_LICENSE("GPL");
