@@ -13,6 +13,8 @@
  * GNU General Public License for more details.
  *
  * Author: Mike Chan (mike@android.com)
+ * Tweaked by Yank555-lu
+ * Hotplugging implementation by TheSSJ
  *
  */
 
@@ -32,6 +34,10 @@
 #include <linux/slab.h>
 #include <linux/kernel_stat.h>
 #include <asm/cputime.h>
+
+//for adding early suspend and late resume handlers
+#include <linux/earlysuspend.h>
+#include <linux/wait.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_thessjactive.h>
@@ -54,9 +60,6 @@ struct cpufreq_thessjactive_cpuinfo {
 	u64 hispeed_validate_time;
 	struct rw_semaphore enable_sem;
 	int governor_enabled;
-	struct delayed_work work;
-	struct work_struct cpu_up_work;
-	struct work_struct cpu_down_work;
 };
 
 static DEFINE_PER_CPU(struct cpufreq_thessjactive_cpuinfo, cpuinfo);
@@ -133,7 +136,40 @@ static struct cpufreq_thessjactive_tunables *common_tunables;
 static struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy);
 static struct attribute_group *get_sysfs_attr(void);
 
-static struct workqueue_struct *khotplug_wq;
+static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
+{
+	printk("entered early_suspend handler in thessjactive");
+	/*
+	unsigned int cpu;
+	for_each_possible_cpu(cpu)
+	{
+		if (cpu<2) //begin offline work at core 3
+			continue;
+		
+		if (cpu_online(cpu) && num_online_cpus() > 2) //get 2 cores down, cores 3 and 4 
+			cpu_down(cpu);
+	}*/
+}
+
+static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
+{
+	printk("entered late_resume handler in thessjactive");
+	/*
+	unsigned int cpu;
+	
+	for_each_possible_cpu(cpu)
+	{
+			if (!cpu_online(cpu) && num_online_cpus() < 4) //get all up 
+			cpu_up(cpu);
+	}
+	*/
+}
+
+static struct early_suspend hotplug_auxcpus_desc __refdata = {
+	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
+	.suspend = early_suspend_offline_cpus,
+	.resume = late_resume_online_cpus,
+};
 
 static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu,
 						  cputime64_t *wall)
@@ -1273,15 +1309,6 @@ static struct attribute_group *get_sysfs_attr(void)
 		return &thessjactive_attr_group_gov_sys;
 }
 
-static void __cpuinit do_cpu_up(struct work_struct *work)
-{
-	cpu_up(1);
-}
-static void __cpuinit do_cpu_down(struct work_struct *work)
-{
-	cpu_down(1);
-}
-
 static int cpufreq_thessjactive_idle_notifier(struct notifier_block *nb,
 					     unsigned long val,
 					     void *data)
@@ -1372,6 +1399,7 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 			idle_notifier_register(&cpufreq_thessjactive_idle_nb);
 			cpufreq_register_notifier(&cpufreq_notifier_block,
 					CPUFREQ_TRANSITION_NOTIFIER);
+			register_early_suspend(&hotplug_auxcpus_desc);
 		}
 
 		break;
@@ -1382,6 +1410,7 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 				cpufreq_unregister_notifier(&cpufreq_notifier_block,
 						CPUFREQ_TRANSITION_NOTIFIER);
 				idle_notifier_unregister(&cpufreq_thessjactive_idle_nb);
+				unregister_early_suspend(&hotplug_auxcpus_desc);
 			}
 
 			sysfs_remove_group(get_governor_parent_kobj(policy),
@@ -1512,15 +1541,12 @@ static int __init cpufreq_thessjactive_init(void)
 	unsigned int i, err;
 	struct cpufreq_thessjactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-	unsigned int cpu;
-	cpu = get_cpu();
-	
-	put_cpu();
+
+	//init_waitqueue_head(&hp_state_wq);
+
 	/* Initalize per-cpu timers */
 	for_each_possible_cpu(i) {
 		pcpu = &per_cpu(cpuinfo, i);
-		INIT_WORK(&pcpu->cpu_up_work, do_cpu_up);
-		INIT_WORK(&pcpu->cpu_down_work, do_cpu_down);
 		init_timer_deferrable(&pcpu->cpu_timer);
 		pcpu->cpu_timer.function = cpufreq_thessjactive_timer;
 		pcpu->cpu_timer.data = i;
@@ -1539,13 +1565,6 @@ static int __init cpufreq_thessjactive_init(void)
 	if (IS_ERR(speedchange_task))
 		return PTR_ERR(speedchange_task);
 
-	khotplug_wq = create_workqueue("khotplug");
-	if (!khotplug_wq) {
-		pr_err("Creation of khotplug failed\n");
-		return -EFAULT;
-	}
-	
-
 	sched_setscheduler_nocheck(speedchange_task, SCHED_FIFO, &param);
 	get_task_struct(speedchange_task);
 	
@@ -1555,7 +1574,7 @@ static int __init cpufreq_thessjactive_init(void)
 	err = cpufreq_register_governor(&cpufreq_gov_thessjactive);
 	if (err)
 	{
-		destroy_workqueue(khotplug_wq);
+		//destroy_workqueue(khotplug_wq);
 		return -EFAULT;
 	}
 	return err;
@@ -1572,7 +1591,7 @@ static void __exit cpufreq_thessjactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_thessjactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
-	destroy_workqueue(khotplug_wq);
+	//destroy_workqueue(khotplug_wq);
 }
 
 module_exit(cpufreq_thessjactive_exit);
