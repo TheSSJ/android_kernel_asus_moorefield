@@ -115,6 +115,7 @@ struct cpufreq_policy {
 
 	struct kobject		kobj;
 	struct completion	kobj_unregister;
+	unsigned int		util;
 };
 
 #define CPUFREQ_ADJUST			(0)
@@ -217,7 +218,6 @@ extern int __cpufreq_driver_getavg(struct cpufreq_policy *policy,
 
 int cpufreq_register_governor(struct cpufreq_governor *governor);
 void cpufreq_unregister_governor(struct cpufreq_governor *governor);
-
 
 /*********************************************************************
  *                      CPUFREQ DRIVER INTERFACE                     *
@@ -435,7 +435,8 @@ void cpufreq_frequency_table_get_attr(struct cpufreq_frequency_table *table,
 void cpufreq_frequency_table_update_policy_cpu(struct cpufreq_policy *policy);
 
 void cpufreq_frequency_table_put_attr(unsigned int cpu);
-
-void set_cpufreq_boost(unsigned long val);
+#ifdef __THESSJ__
+static void (*set_tboost)(void);
+#endif
 
 #endif /* _LINUX_CPUFREQ_H */

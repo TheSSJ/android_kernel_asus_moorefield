@@ -15,6 +15,10 @@
  * Author: Mike Chan (mike@android.com)
  *
  */
+#ifndef __THESSJ__
+#define __THESSJ__
+#endif
+
 
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
@@ -35,6 +39,7 @@
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_yankactive.h>
+
 
 struct cpufreq_yankactive_cpuinfo {
 	struct timer_list cpu_timer;
@@ -713,6 +718,23 @@ static void cpufreq_yankactive_touchboost(void)
 		wake_up_process(speedchange_task);
 }
 
+void set_tboost_ya(void)
+{
+        struct cpufreq_yankactive_cpuinfo *pcpu =
+		&per_cpu(cpuinfo, smp_processor_id());
+
+        struct cpufreq_yankactive_tunables *tunables =
+		pcpu->policy->governor_data;
+		
+        tunables->touchboostpulse_endtime = ktime_to_us(ktime_get())
+				+ tunables->touchboostpulse_duration_val;
+		trace_cpufreq_yankactive_boost("pulse");
+		cpufreq_yankactive_touchboost();
+
+	return;
+}
+EXPORT_SYMBOL_GPL(set_tboost);
+
 
 static int cpufreq_yankactive_notifier(
 	struct notifier_block *nb, unsigned long val, void *data)
@@ -1387,7 +1409,7 @@ static int cpufreq_governor_yankactive(struct cpufreq_policy *policy,
 			tunables->hispeed_freq = policy->max;
 
 		if (!tunables->touchboost_freq)
-			tunables->touchboost_freq = policy->max;
+			tunables->touchboost_freq = policy->max - 500000; //1.83GHz for 2.33GHz models, 1.33GHz for the 1.83GHz models
 		for_each_cpu(j, policy->cpus) {
 			pcpu = &per_cpu(cpuinfo, j);
 			pcpu->policy = policy;
@@ -1498,7 +1520,7 @@ static int __init cpufreq_yankactive_init(void)
 	unsigned int i;
 	struct cpufreq_yankactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-
+	set_tboost = &set_tboost_ya;
 	/* Initalize per-cpu timers */
 	for_each_possible_cpu(i) {
 		pcpu = &per_cpu(cpuinfo, i);
@@ -1540,6 +1562,7 @@ static void __exit cpufreq_yankactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_yankactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
+	set_tboost = NULL;
 }
 
 module_exit(cpufreq_yankactive_exit);

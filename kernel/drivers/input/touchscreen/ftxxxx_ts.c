@@ -6,6 +6,7 @@
 *
 * This software is licensed under the terms of the GNU General Public
 * License version 2, as published by the Free Software Foundation, and
+* may be copied, distributed, and modified under those terms.ts_event
 * may be copied, distributed, and modified under those terms.
 *
 * This program is distributed in the hope that it will be useful,
@@ -15,6 +16,10 @@
 *
 */
 //#define DEBUG
+#ifndef __THESSJ__
+#define __THESSJ__
+#endif
+
 #include <linux/i2c.h>
 #include <linux/input.h>
 #include <linux/earlysuspend.h>
@@ -24,6 +29,7 @@
 #include <linux/irq.h>
 //#include <mach/irqs.h>
 #include <linux/kernel.h>
+#include <linux/cpufreq.h>
 #include <linux/semaphore.h>
 #include <linux/mutex.h>
 #include <linux/module.h>
@@ -767,6 +773,10 @@ static void ftxxxx_report_value(struct ftxxxx_ts_data *data)
 
 			if (event->au8_touch_event[i]== 0 || event->au8_touch_event[i] == 2)
 			{
+				//Touch is handled here for thessjactive and yankactive
+				if(set_tboost!=NULL)
+					set_tboost();
+				
 				input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, true);
 				//input_report_abs(data->input_dev, ABS_MT_PRESSURE, event->pressure);
 				//input_report_abs(data->input_dev, ABS_MT_TOUCH_MAJOR, event->pressure);
@@ -779,6 +789,9 @@ static void ftxxxx_report_value(struct ftxxxx_ts_data *data)
 			}
 			else
 			{
+				//Touch up is done here
+				
+				
 				uppoint++;
 				input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, false);
 				data->touchs &= ~BIT(event->au8_finger_id[i]);
@@ -1716,6 +1729,7 @@ static struct i2c_driver ftxxxx_ts_driver = {
 
 static int __init ftxxxx_ts_init(void)
 {
+	set_tboost = NULL; //we don't want any garbage before tboost isn't initialized on governor side
 	int ret;
 	ret = i2c_add_driver(&ftxxxx_ts_driver);
 	if (ret) {

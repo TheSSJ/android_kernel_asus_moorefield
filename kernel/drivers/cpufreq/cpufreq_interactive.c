@@ -16,6 +16,10 @@
  *
  */
 
+#ifndef __THESSJ__
+#define __THESSJ__
+#endif
+
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
 #include <linux/cpufreq.h>
@@ -1387,7 +1391,7 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 			tunables->hispeed_freq = policy->max;
 
 		if (!tunables->touchboost_freq)
-			tunables->touchboost_freq = policy->max;
+			tunables->touchboost_freq = policy->max - 500000; //1.83GHz for 2.33GHz models, 1.33GHz for the 1.83GHz models
 		for_each_cpu(j, policy->cpus) {
 			pcpu = &per_cpu(cpuinfo, j);
 			pcpu->policy = policy;
@@ -1498,7 +1502,7 @@ static int __init cpufreq_interactive_init(void)
 	unsigned int i;
 	struct cpufreq_interactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-
+	set_tboost = NULL;
 	/* Initalize per-cpu timers */
 	for_each_possible_cpu(i) {
 		pcpu = &per_cpu(cpuinfo, i);
@@ -1540,6 +1544,7 @@ static void __exit cpufreq_interactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_interactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
+	set_tboost = NULL; //paranoid mode
 }
 
 module_exit(cpufreq_interactive_exit);
