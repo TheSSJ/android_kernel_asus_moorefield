@@ -765,7 +765,8 @@ static void cpufreq_thessjactive_touchboost(void)
 }
 
 void set_tboost_ta(void)
-{
+{		
+		printk("Entered touchboost mode in thessjactive");
         struct cpufreq_thessjactive_cpuinfo *pcpu =
 		&per_cpu(cpuinfo, smp_processor_id());
 

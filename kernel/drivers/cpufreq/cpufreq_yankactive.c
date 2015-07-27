@@ -720,6 +720,7 @@ static void cpufreq_yankactive_touchboost(void)
 
 void set_tboost_ya(void)
 {
+		printk("Entered touchboost mode in yankactive");
         struct cpufreq_yankactive_cpuinfo *pcpu =
 		&per_cpu(cpuinfo, smp_processor_id());
 

@@ -471,8 +471,9 @@ static int otm1901a_vid_set_brightness(struct mdfld_dsi_config *dsi_config,
 	} else {
 		DRM_ERROR("Cannot map pwmctrl\n");
 	}
-
-	printk("[DISP] brightness level = %d\n", level);
+	
+	if (level == 0)
+		printk("[DISP] brightness level = %d\n", level);
 
 	return 0;
 }
