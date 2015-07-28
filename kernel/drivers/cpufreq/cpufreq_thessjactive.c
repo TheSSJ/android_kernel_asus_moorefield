@@ -18,10 +18,6 @@
  *
  */
 
-#ifndef __THESSJ__
-#define __THESSJ__
-#endif
-
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
 #include <linux/cpufreq.h>
@@ -48,6 +44,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_thessjactive.h>
 
+extern void (*set_tboost)(void);
 
 struct cpufreq_thessjactive_cpuinfo {
 	struct timer_list cpu_timer;
@@ -764,7 +761,7 @@ static void cpufreq_thessjactive_touchboost(void)
 		wake_up_process(speedchange_task);
 }
 
-void set_tboost_ta(void)
+static void set_tboost_ta(void)
 {		
 		printk("Entered touchboost mode in thessjactive");
         struct cpufreq_thessjactive_cpuinfo *pcpu =
@@ -1568,7 +1565,7 @@ static int __init cpufreq_thessjactive_init(void)
 	unsigned int i, err;
 	struct cpufreq_thessjactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-	set_tboost = &set_tboost_ta;
+	//set_tboost = &set_tboost_ta;
 	//init_waitqueue_head(&hp_state_wq);
 
 	/* Initalize per-cpu timers */
@@ -1618,7 +1615,7 @@ static void __exit cpufreq_thessjactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_thessjactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
-	set_tboost = NULL;
+	//set_tboost = NULL;
 }
 
 module_exit(cpufreq_thessjactive_exit);

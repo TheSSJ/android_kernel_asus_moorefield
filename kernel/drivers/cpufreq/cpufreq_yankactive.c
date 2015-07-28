@@ -15,11 +15,6 @@
  * Author: Mike Chan (mike@android.com)
  *
  */
-#ifndef __THESSJ__
-#define __THESSJ__
-#endif
-
-
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
 #include <linux/cpufreq.h>
@@ -39,7 +34,6 @@
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_yankactive.h>
-
 
 struct cpufreq_yankactive_cpuinfo {
 	struct timer_list cpu_timer;
@@ -718,23 +712,22 @@ static void cpufreq_yankactive_touchboost(void)
 		wake_up_process(speedchange_task);
 }
 
-void set_tboost_ya(void)
+static void set_tboost_ya(void)
 {
-		printk("Entered touchboost mode in yankactive");
-        struct cpufreq_yankactive_cpuinfo *pcpu =
-		&per_cpu(cpuinfo, smp_processor_id());
+	printk("Entered touchboost mode in yankactive");
+	struct cpufreq_yankactive_cpuinfo *pcpu =
+	&per_cpu(cpuinfo, smp_processor_id());
 
-        struct cpufreq_yankactive_tunables *tunables =
-		pcpu->policy->governor_data;
-		
-        tunables->touchboostpulse_endtime = ktime_to_us(ktime_get())
-				+ tunables->touchboostpulse_duration_val;
-		trace_cpufreq_yankactive_boost("pulse");
-		cpufreq_yankactive_touchboost();
+	struct cpufreq_yankactive_tunables *tunables =
+	pcpu->policy->governor_data;
+	
+	tunables->touchboostpulse_endtime = ktime_to_us(ktime_get())
+			+ tunables->touchboostpulse_duration_val;
+	trace_cpufreq_yankactive_boost("pulse");
+	cpufreq_yankactive_touchboost();
 
 	return;
 }
-EXPORT_SYMBOL_GPL(set_tboost);
 
 
 static int cpufreq_yankactive_notifier(
@@ -1521,7 +1514,7 @@ static int __init cpufreq_yankactive_init(void)
 	unsigned int i;
 	struct cpufreq_yankactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-	set_tboost = &set_tboost_ya;
+	//set_tboost = &set_tboost_ya;
 	/* Initalize per-cpu timers */
 	for_each_possible_cpu(i) {
 		pcpu = &per_cpu(cpuinfo, i);
@@ -1563,7 +1556,7 @@ static void __exit cpufreq_yankactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_yankactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
-	set_tboost = NULL;
+	//set_tboost = NULL;
 }
 
 module_exit(cpufreq_yankactive_exit);

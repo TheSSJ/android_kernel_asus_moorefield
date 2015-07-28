@@ -16,9 +16,6 @@
 *
 */
 //#define DEBUG
-#ifndef __THESSJ__
-#define __THESSJ__
-#endif
 
 #include <linux/i2c.h>
 #include <linux/input.h>
@@ -29,7 +26,6 @@
 #include <linux/irq.h>
 //#include <mach/irqs.h>
 #include <linux/kernel.h>
-#include <linux/cpufreq.h>
 #include <linux/semaphore.h>
 #include <linux/mutex.h>
 #include <linux/module.h>
@@ -120,6 +116,7 @@ extern int gesture_mode;
 #include "ftxxxx_ex_fun.h"
 #endif
 
+extern void (*set_tboost)(void);
 extern int glove_mode;
 extern int cover_mode;
 int sleep_mode = 0;
@@ -773,10 +770,6 @@ static void ftxxxx_report_value(struct ftxxxx_ts_data *data)
 
 			if (event->au8_touch_event[i]== 0 || event->au8_touch_event[i] == 2)
 			{
-				//Touch is handled here for thessjactive and yankactive
-				if(set_tboost!=NULL)
-					set_tboost();
-				
 				input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, true);
 				//input_report_abs(data->input_dev, ABS_MT_PRESSURE, event->pressure);
 				//input_report_abs(data->input_dev, ABS_MT_TOUCH_MAJOR, event->pressure);
@@ -1727,9 +1720,11 @@ static struct i2c_driver ftxxxx_ts_driver = {
 	},
 };
 
+static void do_nop(void)
+{}
+
 static int __init ftxxxx_ts_init(void)
 {
-	set_tboost = NULL; //we don't want any garbage before tboost isn't initialized on governor side
 	int ret;
 	ret = i2c_add_driver(&ftxxxx_ts_driver);
 	if (ret) {
@@ -1741,6 +1736,8 @@ static int __init ftxxxx_ts_init(void)
 	}
 	return ret;
 }
+
+
 
 static void __exit ftxxxx_ts_exit(void)
 {

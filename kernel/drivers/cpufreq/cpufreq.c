@@ -16,6 +16,7 @@
  */
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+#define __THESSJ__
 
 #include <linux/kernel.h>
 #include <linux/module.h>

@@ -16,10 +16,6 @@
  *
  */
 
-#ifndef __THESSJ__
-#define __THESSJ__
-#endif
-
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
 #include <linux/cpufreq.h>
@@ -36,9 +32,12 @@
 #include <linux/slab.h>
 #include <linux/kernel_stat.h>
 #include <asm/cputime.h>
+//#include <linux/touchboost.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_interactive.h>
+
+//extern void (*set_tboost)(void);
 
 struct cpufreq_interactive_cpuinfo {
 	struct timer_list cpu_timer;
@@ -1500,9 +1499,9 @@ static struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy)
 static int __init cpufreq_interactive_init(void)
 {
 	unsigned int i;
+	//set_tboost = &tboostdummy;
 	struct cpufreq_interactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-	set_tboost = NULL;
 	/* Initalize per-cpu timers */
 	for_each_possible_cpu(i) {
 		pcpu = &per_cpu(cpuinfo, i);
@@ -1544,7 +1543,7 @@ static void __exit cpufreq_interactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_interactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
-	set_tboost = NULL; //paranoid mode
+	//set_tboost = NULL; //paranoid mode
 }
 
 module_exit(cpufreq_interactive_exit);
