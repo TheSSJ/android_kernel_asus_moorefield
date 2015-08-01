@@ -113,6 +113,8 @@ extern int gesture_mode;
 extern int glove_mode;
 extern int cover_mode;
 int sleep_mode = 0;
+extern int ta_active;
+int now=0;
 
 struct ts_event {
 	u16 au16_x[CFG_MAX_TOUCH_POINTS];	/*x coordinate */
@@ -762,7 +764,11 @@ static void ftxxxx_report_value(struct ftxxxx_ts_data *data)
 			if (event->au8_touch_event[i]== 0 || event->au8_touch_event[i] == 2)
 			{
 				//0 is issued only, when the finger and the screen make the first contact, then 2 is issued if the pressure still belongs to the same touch
-								
+				if(ta_active==1)
+				{
+					set_cpufreq_boost_ta(1);
+				}
+						
 				input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, true);
 				//input_report_abs(data->input_dev, ABS_MT_PRESSURE, event->pressure);
 				//input_report_abs(data->input_dev, ABS_MT_TOUCH_MAJOR, event->pressure);
@@ -776,7 +782,8 @@ static void ftxxxx_report_value(struct ftxxxx_ts_data *data)
 			else
 			{
 				//Touch up is done here
-				
+				if(ta_active==1)
+					set_cpufreq_boost_ta(0);
 				uppoint++;
 				input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, false);
 				data->touchs &= ~BIT(event->au8_finger_id[i]);
@@ -1717,7 +1724,7 @@ static void do_nop(void)
 
 static int __init ftxxxx_ts_init(void)
 {
-	//set_tboost = &do_nop;
+	ta_active = 0;
 	int ret;
 	ret = i2c_add_driver(&ftxxxx_ts_driver);
 	if (ret) {

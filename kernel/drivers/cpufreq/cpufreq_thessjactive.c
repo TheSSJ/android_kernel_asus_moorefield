@@ -136,6 +136,8 @@ static struct cpufreq_thessjactive_tunables *common_tunables;
 static struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy);
 static struct attribute_group *get_sysfs_attr(void);
 
+int ta_active = 0;
+
 static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 {
 	#ifdef GOVDEBUG
@@ -756,7 +758,7 @@ static void cpufreq_thessjactive_touchboost(void)
 	if (anyboost)
 		wake_up_process(speedchange_task);
 }
-EXPORT_SYMBOL(cpufreq_thessjactive_touchboost);
+//EXPORT_SYMBOL(cpufreq_thessjactive_touchboost);
 
 static int cpufreq_thessjactive_notifier(
 	struct notifier_block *nb, unsigned long val, void *data)
@@ -1426,8 +1428,8 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 		break;
 
 	case CPUFREQ_GOV_START:
+		ta_active = 1;
 		mutex_lock(&gov_lock);
-
 		freq_table = cpufreq_frequency_get_table(policy->cpu);
 		if (!tunables->hispeed_freq)
 			tunables->hispeed_freq = policy->max;
@@ -1457,6 +1459,7 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 		break;
 
 	case CPUFREQ_GOV_STOP:
+		ta_active = 0;
 		mutex_lock(&gov_lock);
 		for_each_cpu(j, policy->cpus) {
 			pcpu = &per_cpu(cpuinfo, j);
@@ -1517,6 +1520,25 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 	return 0;
 }
 
+void set_cpufreq_boost_ta(unsigned int enable)
+{
+		if(ta_active==0)
+			return;
+		struct cpufreq_thessjactive_cpuinfo *pcpu = &per_cpu(cpuinfo, raw_smp_processor_id());
+        struct cpufreq_thessjactive_tunables *tunables = pcpu->policy->governor_data;
+        
+         if (enable && (ktime_to_us(ktime_get()) > tunables->touchboostpulse_endtime)) {
+			tunables->touchboostpulse_endtime = ktime_to_us(ktime_get()) + tunables->touchboostpulse_duration_val;
+			trace_cpufreq_thessjactive_boost("pulse");
+            cpufreq_thessjactive_touchboost();
+			} 
+        else {
+                trace_cpufreq_thessjactive_unboost("off");
+			}
+	return;
+}
+EXPORT_SYMBOL_GPL(set_cpufreq_boost_ta);
+
 #ifndef CONFIG_CPU_FREQ_DEFAULT_GOV_thessjactive
 static
 #endif
@@ -1544,7 +1566,7 @@ static int __init cpufreq_thessjactive_init(void)
 	unsigned int i, err;
 	struct cpufreq_thessjactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-
+	
 	/* Initalize per-cpu timers */
 	for_each_possible_cpu(i) {
 		pcpu = &per_cpu(cpuinfo, i);
