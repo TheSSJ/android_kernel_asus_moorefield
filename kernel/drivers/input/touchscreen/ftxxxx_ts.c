@@ -24,7 +24,6 @@
 #include <linux/slab.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
-//#include <mach/irqs.h>
 #include <linux/kernel.h>
 #include <linux/semaphore.h>
 #include <linux/mutex.h>
@@ -45,13 +44,8 @@
 #include <asm/intel-mid.h>
 #include "ftxxxx_ts.h"
 #include "ftxxxx_ex_fun.h"
-
-//#include <mach/gpio.h>
-//#include <mach/map.h>
-//#include <mach/regs-clock.h>
-//#include <mach/regs-gpio.h>
-//#include <plat/gpio-cfg.h>
 #include <linux/gpio.h>
+#include <linux/cpufreq.h>
 
 #define SYSFS_DEBUG
 #define FTS_APK_DEBUG
@@ -116,7 +110,6 @@ extern int gesture_mode;
 #include "ftxxxx_ex_fun.h"
 #endif
 
-extern void (*set_tboost)(void);
 extern int glove_mode;
 extern int cover_mode;
 int sleep_mode = 0;
@@ -765,11 +758,11 @@ static void ftxxxx_report_value(struct ftxxxx_ts_data *data)
 			//protocol B
 			//Tempdev_dbg(&data->client->dev, "[ftxxxx] event= %d, x= %d, y= %d, point= %d\n", event->au8_touch_event[i], event->au16_x[i], event->au16_y[i], event->touch_point);
 			//Tempdev_dbg(&data->client->dev, "[ftxxxx] finger_id=%d, event->pressure= %d, uppoint= %d\n", event->au8_finger_id[i], event->pressure, uppoint);
-
 			input_mt_slot(data->input_dev, event->au8_finger_id[i]);
-
 			if (event->au8_touch_event[i]== 0 || event->au8_touch_event[i] == 2)
 			{
+				//0 is issued only, when the finger and the screen make the first contact, then 2 is issued if the pressure still belongs to the same touch
+								
 				input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, true);
 				//input_report_abs(data->input_dev, ABS_MT_PRESSURE, event->pressure);
 				//input_report_abs(data->input_dev, ABS_MT_TOUCH_MAJOR, event->pressure);
@@ -783,7 +776,6 @@ static void ftxxxx_report_value(struct ftxxxx_ts_data *data)
 			else
 			{
 				//Touch up is done here
-				
 				
 				uppoint++;
 				input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, false);
@@ -1725,6 +1717,7 @@ static void do_nop(void)
 
 static int __init ftxxxx_ts_init(void)
 {
+	//set_tboost = &do_nop;
 	int ret;
 	ret = i2c_add_driver(&ftxxxx_ts_driver);
 	if (ret) {

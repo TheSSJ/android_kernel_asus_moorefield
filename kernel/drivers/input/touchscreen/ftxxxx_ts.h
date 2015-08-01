@@ -79,4 +79,6 @@ struct ftxxxx_platform_data {
 	int pressure_max;
 };
 
+//extern void (*set_tboost)(void);
+
 #endif

@@ -712,24 +712,6 @@ static void cpufreq_yankactive_touchboost(void)
 		wake_up_process(speedchange_task);
 }
 
-static void set_tboost_ya(void)
-{
-	printk("Entered touchboost mode in yankactive");
-	struct cpufreq_yankactive_cpuinfo *pcpu =
-	&per_cpu(cpuinfo, smp_processor_id());
-
-	struct cpufreq_yankactive_tunables *tunables =
-	pcpu->policy->governor_data;
-	
-	tunables->touchboostpulse_endtime = ktime_to_us(ktime_get())
-			+ tunables->touchboostpulse_duration_val;
-	trace_cpufreq_yankactive_boost("pulse");
-	cpufreq_yankactive_touchboost();
-
-	return;
-}
-
-
 static int cpufreq_yankactive_notifier(
 	struct notifier_block *nb, unsigned long val, void *data)
 {
@@ -1556,7 +1538,6 @@ static void __exit cpufreq_yankactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_yankactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
-	//set_tboost = NULL;
 }
 
 module_exit(cpufreq_yankactive_exit);

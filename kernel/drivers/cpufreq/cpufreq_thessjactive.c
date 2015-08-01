@@ -36,15 +36,11 @@
 #include <asm/cputime.h>
 
 //for adding early suspend and late resume handlers
-//easy debug switch
-//#define GOVDEBUG
 #include <linux/earlysuspend.h>
 #include <linux/wait.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_thessjactive.h>
-
-extern void (*set_tboost)(void);
 
 struct cpufreq_thessjactive_cpuinfo {
 	struct timer_list cpu_timer;
@@ -760,24 +756,7 @@ static void cpufreq_thessjactive_touchboost(void)
 	if (anyboost)
 		wake_up_process(speedchange_task);
 }
-
-static void set_tboost_ta(void)
-{		
-		printk("Entered touchboost mode in thessjactive");
-        struct cpufreq_thessjactive_cpuinfo *pcpu =
-		&per_cpu(cpuinfo, smp_processor_id());
-
-        struct cpufreq_thessjactive_tunables *tunables =
-		pcpu->policy->governor_data;
-		
-        tunables->touchboostpulse_endtime = ktime_to_us(ktime_get())
-				+ tunables->touchboostpulse_duration_val;
-		trace_cpufreq_thessjactive_boost("pulse");
-		cpufreq_thessjactive_touchboost();
-
-	return;
-}
-
+EXPORT_SYMBOL(cpufreq_thessjactive_touchboost);
 
 static int cpufreq_thessjactive_notifier(
 	struct notifier_block *nb, unsigned long val, void *data)
@@ -1565,8 +1544,6 @@ static int __init cpufreq_thessjactive_init(void)
 	unsigned int i, err;
 	struct cpufreq_thessjactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-	//set_tboost = &set_tboost_ta;
-	//init_waitqueue_head(&hp_state_wq);
 
 	/* Initalize per-cpu timers */
 	for_each_possible_cpu(i) {
@@ -1615,7 +1592,6 @@ static void __exit cpufreq_thessjactive_exit(void)
 	cpufreq_unregister_governor(&cpufreq_gov_thessjactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);
-	//set_tboost = NULL;
 }
 
 module_exit(cpufreq_thessjactive_exit);
