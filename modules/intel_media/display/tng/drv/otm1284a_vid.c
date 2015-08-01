@@ -1017,7 +1017,6 @@ static int otm1284a_vid_set_brightness(struct mdfld_dsi_config *dsi_config,
 	} else {
 		DRM_ERROR("Cannot map pwmctrl\n");
 	}
-
 	printk("[DISP] brightness level = %d\n", level);
 #endif
 	return 0;
