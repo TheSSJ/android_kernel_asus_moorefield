@@ -36,6 +36,7 @@ cflags-$(CONFIG_MATOM)		+= $(call cc-option,-march=atom,$(call cc-option,-march=
 	$(call cc-option,-mtune=atom,$(call cc-option,-mtune=generic))
 cflags-$(CONFIG_MSLM)		+= $(call cc-option,-march=slm,$(call cc-option,-march=core2,-march=i686)) \
 	$(call cc-option,-mtune=slm,$(call cc-option,-mtune=generic))
+#cflags-$(CONFIG_MSLM)		+= $(call cc-option,-xSSSE3_ATOM)
 
 # AMD Elan support
 cflags-$(CONFIG_MELAN)		+= -march=i486

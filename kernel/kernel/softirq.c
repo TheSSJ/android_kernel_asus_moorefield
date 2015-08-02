@@ -803,7 +803,8 @@ void tasklet_kill_immediate(struct tasklet_struct *t, unsigned int cpu)
 		return;
 
 	/* CPU is dead, so no lock needed. */
-	for (i = &per_cpu(tasklet_vec, cpu).head; *i; i = &(*i)->next) {
+	i = &per_cpu(tasklet_vec, cpu).head;
+	for (; *i; i = &(*i)->next) {
 		if (*i == t) {
 			*i = t->next;
 			/* If this was the tail element, move the tail ptr */

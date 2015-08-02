@@ -664,7 +664,7 @@ static inline void cpu_relax(void)
 }
 
 /* Stop speculative execution and prefetching of modified code. */
-static inline void sync_core(void)
+__attribute__((always_inline)) static inline void sync_core(void)
 {
 	int tmp;
 
