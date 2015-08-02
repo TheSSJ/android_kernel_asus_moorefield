@@ -136,13 +136,13 @@ static struct cpufreq_thessjactive_tunables *common_tunables;
 static struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy);
 static struct attribute_group *get_sysfs_attr(void);
 
-int ta_active = 0;
+extern whichgov ta_active;
 
 static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 {
 	#ifdef GOVDEBUG
 	printk("entered early_suspend handler in thessjactive");
-	#else
+	#endif
 	unsigned int cpu;
 	for_each_possible_cpu(cpu)
 	{
@@ -152,14 +152,13 @@ static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 		if (cpu_online(cpu) && num_online_cpus() > 2) //get 2 cores down, cores 3 and 4 
 			cpu_down(cpu);
 	}
-	#endif
 }
 
 static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
 {
 	#ifdef GOVDEBUG
 	printk("entered late_resume handler in thessjactive");
-	#else
+	#endif
 	unsigned int cpu;
 	
 	for_each_possible_cpu(cpu)
@@ -167,7 +166,6 @@ static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
 		if (!cpu_online(cpu) && num_online_cpus() < 4) //get all up 
 			cpu_up(cpu);
 	}
-	#endif
 }
 
 static struct early_suspend hotplug_auxcpus_desc __refdata = {
@@ -1428,7 +1426,7 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 		break;
 
 	case CPUFREQ_GOV_START:
-		ta_active = 1;
+		ta_active = THESSJACTIVE;
 		mutex_lock(&gov_lock);
 		freq_table = cpufreq_frequency_get_table(policy->cpu);
 		if (!tunables->hispeed_freq)
@@ -1459,7 +1457,7 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 		break;
 
 	case CPUFREQ_GOV_STOP:
-		ta_active = 0;
+		ta_active = NONE;
 		mutex_lock(&gov_lock);
 		for_each_cpu(j, policy->cpus) {
 			pcpu = &per_cpu(cpuinfo, j);
@@ -1522,7 +1520,7 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 
 void set_cpufreq_boost_ta(unsigned int enable)
 {
-		if(ta_active==0)
+		if(ta_active==NONE)
 			return;
 		struct cpufreq_thessjactive_cpuinfo *pcpu = &per_cpu(cpuinfo, raw_smp_processor_id());
         struct cpufreq_thessjactive_tunables *tunables = pcpu->policy->governor_data;
