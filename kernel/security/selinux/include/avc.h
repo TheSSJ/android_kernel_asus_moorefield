@@ -146,7 +146,7 @@ static inline int avc_audit(u32 ssid, u32 tsid,
 			      a, flags, result);
 }
 
-#define AVC_STRICT 1 /* Ignore permissive mode. */
+#define AVC_STRICT 0 /* Ignore permissive mode. */
 int avc_has_perm_noaudit(u32 ssid, u32 tsid,
 			 u16 tclass, u32 requested,
 			 unsigned flags,
