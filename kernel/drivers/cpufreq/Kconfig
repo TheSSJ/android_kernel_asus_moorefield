@@ -179,13 +179,6 @@ config CPU_FREQ_GOV_ONDEMAND
 
 	  If in doubt, say N.
 
-config CPU_FREQ_GOV_HOTDEMAND
-	tristate "'hotdemand' cpufreq policy governor"
-	select CPU_FREQ_TABLE
-	select CPU_FREQ_GOV_COMMON
-	help
-	  'hotdemand' - same as ondemand, only with Hotplugging implemented
-
 config CPU_FREQ_GOV_INTERACTIVE
 	tristate "'interactive' cpufreq policy governor"
 	help
