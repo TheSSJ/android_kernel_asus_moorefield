@@ -26,7 +26,7 @@
 #include <linux/tick.h>
 #include <linux/types.h>
 #include <linux/cpu.h>
-
+#include <linux/earlysuspend.h>
 #include "cpufreq_governor.h"
 
 /* On-demand governor macros */
