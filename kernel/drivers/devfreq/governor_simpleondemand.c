@@ -13,6 +13,7 @@
 #include <linux/module.h>
 #include <linux/devfreq.h>
 #include <linux/math64.h>
+
 #include "governor.h"
 
 #define DEVFREQ_SIMPLE_ONDEMAND	"simple_ondemand"
@@ -23,6 +24,24 @@
 
 static unsigned int dfso_upthreshold = DFSO_UPTHRESHOLD;
 static unsigned int dfso_downdifferential = DFSO_DOWNDIFFERENCTIAL;
+
+int devfreq_policy_add_files(struct devfreq *devfreq,
+			     struct attribute_group attr_group)
+{
+	int ret;
+
+	ret = sysfs_create_group(&devfreq->dev.kobj, &attr_group);
+	if (ret)
+		kobject_put(&devfreq->dev.kobj);
+
+	return ret;
+}
+
+void devfreq_policy_remove_files(struct devfreq *devfreq,
+				 struct attribute_group attr_group)
+{
+	sysfs_remove_group(&devfreq->dev.kobj, &attr_group);
+}
 
 
 static int devfreq_simple_ondemand_func(struct devfreq *df,

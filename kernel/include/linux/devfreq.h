@@ -209,6 +209,7 @@ extern int devfreq_unregister_opp_notifier(struct device *dev,
 struct devfreq_simple_ondemand_data {
 	unsigned int upthreshold;
 	unsigned int downdifferential;
+	unsigned int simple_scaling;
 };
 #endif
 

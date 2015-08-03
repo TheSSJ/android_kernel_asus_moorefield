@@ -37,6 +37,8 @@
 #include <linux/input.h>
 #include <linux/kernel_stat.h>
 
+#define MAX_RT_PRIO 100
+
 static int active_count;
 
 struct cpufreq_impulse_cpuinfo {
