@@ -1595,45 +1595,7 @@ static void ftxxxx_ts_resume(struct early_suspend *handler)
 	if (glove_mode == 1) {
 		ftxxxx_write_reg(ts->client, 0xC0, 1);
 	}
-/*	
-	//gesture mode
-	ftxxxx_write_reg(ts->client, 0xd1, 0x30);
-	ftxxxx_write_reg(ts->client, 0xd2, 0x1A);
-	ftxxxx_write_reg(ts->client, 0xd5, 0x40);
-	ftxxxx_write_reg(ts->client, 0xd6, 0x10);
-	ftxxxx_write_reg(ts->client, 0xd7, 0x20);
-	ftxxxx_write_reg(ts->client, 0xd8, 0x00);
-	if (Read_PROJ_ID() == PROJ_ID_ZE550ML)
-	{
-		ftxxxx_write_reg(ts->client, 0xda, 0x64);
-		ftxxxx_write_reg(ts->client, 0xdb, 0x00);
-		ftxxxx_write_reg(ts->client, 0xdc, 0x40);
-		ftxxxx_write_reg(ts->client, 0xdd, 0x05);
-		ftxxxx_write_reg(ts->client, 0xde, 0x64);
-		ftxxxx_write_reg(ts->client, 0xdf, 0x00);
-		ftxxxx_write_reg(ts->client, 0xe0, 0x6c);
-		ftxxxx_write_reg(ts->client, 0xe1, 0x02);
-		ftxxxx_write_reg(ts->client, 0xe2, 0x20);
-		ftxxxx_write_reg(ts->client, 0xe3, 0x10);
-		ftxxxx_write_reg(ts->client, 0xe4, 0x3e);
-		ftxxxx_write_reg(ts->client, 0xe5, 0x06);
-	}
-	else if (Read_PROJ_ID() == PROJ_ID_ZE551ML  || Read_PROJ_ID() == PROJ_ID_ZE551ML_CKD)
-	{
-		ftxxxx_write_reg(ts->client, 0xda, 0x96);
-		ftxxxx_write_reg(ts->client, 0xdb, 0x00);
-		ftxxxx_write_reg(ts->client, 0xdc, 0xe0);
-		ftxxxx_write_reg(ts->client, 0xdd, 0x07);
-		ftxxxx_write_reg(ts->client, 0xde, 0x96);
-		ftxxxx_write_reg(ts->client, 0xdf, 0x00);
-		ftxxxx_write_reg(ts->client, 0xe0, 0xa2);
-		ftxxxx_write_reg(ts->client, 0xe1, 0x03);
-		ftxxxx_write_reg(ts->client, 0xe2, 0x30);
-		ftxxxx_write_reg(ts->client, 0xe3, 0x18);
-		ftxxxx_write_reg(ts->client, 0xe4, 0x3e);
-		ftxxxx_write_reg(ts->client, 0xe5, 0x06);
-	}
-*/	
+
 	//cover mode
 	if (cover_mode == 1) {
 		ftxxxx_write_reg(ts->client, 0xC1, 1);

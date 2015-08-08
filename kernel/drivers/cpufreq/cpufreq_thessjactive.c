@@ -1426,7 +1426,6 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 		break;
 
 	case CPUFREQ_GOV_START:
-		ta_active = THESSJACTIVE;
 		mutex_lock(&gov_lock);
 		freq_table = cpufreq_frequency_get_table(policy->cpu);
 		if (!tunables->hispeed_freq)
@@ -1454,6 +1453,7 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 		}
 
 		mutex_unlock(&gov_lock);
+		ta_active = THESSJACTIVE;
 		break;
 
 	case CPUFREQ_GOV_STOP:
