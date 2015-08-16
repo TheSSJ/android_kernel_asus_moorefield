@@ -156,7 +156,7 @@ static void detect_sweep2sleep(int pressedKey)
 			if(pressedKey == KEY_HOME)
 			{
 				if(debug)
-					pr_info(LOGTAG"registered KEY_BACK");
+					pr_info(LOGTAG"registered KEY_MENU");
 				pressArray[1] = KEY_HOME;
 				//register and break out
 				return;
@@ -204,7 +204,7 @@ static void s2s_input_callback(struct work_struct *unused)
 static void s2s_input_event(struct input_handle *handle, unsigned int type,
 				unsigned int code, int value)
 {
-	if (!s2s)
+	if (!s2s && !touchboost)
 		return;
 	
 	if (code == ABS_MT_TRACKING_ID && value == -1) 
@@ -246,6 +246,9 @@ static void s2s_input_event(struct input_handle *handle, unsigned int type,
 				set_cpufreq_boost_ya(1);
 		}
 		
+		if(!s2s)
+			return;
+			
 		if(touch_y >= 1910 && touch_y <= 2500)
 		{
 			if(debug)
