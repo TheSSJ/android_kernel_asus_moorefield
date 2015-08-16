@@ -1501,9 +1501,9 @@ static int nt35596_vid_set_brightness(struct mdfld_dsi_config *dsi_config,
 #ifdef CONFIG_BACKLIGHT_RT4532
 	rt4532_brightness_set(level);
 #endif
-	/* Re-assign the minimum brightness value to 15 */
-	if (level > 0 && level <= 15)
-		level = 15;
+	/* Re-assign the minimum brightness value to 10 */
+	if (level > 0 && level <= 10)
+		level = 10; //test edit
 
 	reg_level = ~level & 0xFF;
 	pwmctrl.part.pwmswupdate = 0x1;
@@ -1535,8 +1535,8 @@ static int nt35596_vid_set_brightness(struct mdfld_dsi_config *dsi_config,
 	} else {
 		DRM_ERROR("Cannot map pwmctrl\n");
 	}
-	if(level == 0)
-		printk("[DISP] brightness level = %d\n", level);
+	if (level == 0)
+		printk("[DISP NT] brightness level = %d\n", level);
 
 	return 0;
 }
