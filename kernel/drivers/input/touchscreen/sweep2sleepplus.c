@@ -1,9 +1,10 @@
 /*
- * Sweep2Wake driver for OnePlus One Bacon with multiple gestures support
+ * Sweep2Wake driver for Zenfone 2
+ * Touchboost support included here
  * 
- * Author: andip71, 10.12.2014
+ * Author: andip71 & TheSSJ, 10.12.2014
  * 
- * Version 1.0.0
+ * Version 1.0.1
  *
  * Credits for initial implementation to Dennis Rassmann <showp1984@gmail.com>
  * 
@@ -30,6 +31,7 @@
 #include <linux/hrtimer.h>
 #include <linux/earlysuspend.h>
 #include "ftxxxx_ts.h"
+#include <linux/cpufreq.h>
 
 
 /*****************************************/
@@ -37,7 +39,7 @@
 /*****************************************/
 
 #define DRIVER_AUTHOR "andip71 (Lord Boeffla), TheSSJ"
-#define DRIVER_DESCRIPTION "Sweep2sleep for Zenfone 2"
+#define DRIVER_DESCRIPTION "Sweep2sleep + Touchboost for Zenfone 2"
 #define DRIVER_VERSION "1.0.1"
 #define LOGTAG "s2s: "
 
@@ -54,7 +56,8 @@ MODULE_LICENSE("GPLv2");
 /* Variables, structures and pointers */
 /*****************************************/
 
-int s2s = 0;
+int s2s = 1;
+int touchboost = 1;
 static int debug = 1;
 static int pwrkey_dur = 60;
 static bool scr_suspended;
@@ -72,6 +75,8 @@ static DEFINE_MUTEX(pwrkeyworklock);
 static struct workqueue_struct *s2s_input_wq;
 static struct work_struct s2s_input_work;
 
+//touchboost code here
+whichgov ta_active = NONE;
 
 /*****************************************/
 // Internal functions
@@ -201,7 +206,20 @@ static void s2s_input_event(struct input_handle *handle, unsigned int type,
 {
 	if (!s2s)
 		return;
-		
+	
+	if (code == ABS_MT_TRACKING_ID && value == -1) 
+	{
+		//Touch up is done here, unboost if still boosted
+		if(touchboost)
+		{
+			if(ta_active==THESSJACTIVE)
+				set_cpufreq_boost_ta(0);
+			if(ta_active==YANKACTIVE)
+				set_cpufreq_boost_ya(0);
+		}
+		return;
+	}
+	
 	if (code == ABS_MT_POSITION_X)
 	{
 		touch_x = value;
@@ -218,6 +236,16 @@ static void s2s_input_event(struct input_handle *handle, unsigned int type,
 	{
 		touch_x_called = false;
 		touch_y_called = false;
+		
+		//we have x and y coordinates, we can start the touchboost now
+		if(touchboost)
+		{
+			if(ta_active==THESSJACTIVE)
+				set_cpufreq_boost_ta(1);
+			if(ta_active==YANKACTIVE)
+				set_cpufreq_boost_ya(1);
+		}
+		
 		if(touch_y >= 1910 && touch_y <= 2500)
 		{
 			if(debug)
@@ -317,11 +345,13 @@ static struct input_handler s2s_input_handler =
 static void early_suspend_screen_off(struct early_suspend *h)
 {
 	scr_suspended = true;
+	touchboost = 0;
 }
 
 static void late_resume_screen_on(struct early_suspend *h)
 {
 	scr_suspended = false;
+	touchboost = 1;
 }
 
 static struct early_suspend screen_detect = {
@@ -404,6 +434,33 @@ static ssize_t version_show(struct device *dev,
 static DEVICE_ATTR(sweep2sleep_version, (S_IWUSR|S_IRUGO),
 	version_show, NULL);
 
+static ssize_t touchboost_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", touchboost);
+}
+
+static ssize_t touchboost_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	unsigned int ret = -EINVAL;
+	int val;
+
+	// read values from input buffer
+	ret = sscanf(buf, "%d", &val);
+
+	if (ret != 1)
+		return -EINVAL;
+		
+	// store if valid data
+	if (((val == 0) || (val == 1)))
+		touchboost = val;
+
+	return count;
+}
+
+static DEVICE_ATTR(sweep2sleep_touchboost, (S_IWUSR|S_IRUGO),
+	touchboost_show, touchboost_store);
 
 /*****************************************/
 // Driver init and exit functions
@@ -481,8 +538,16 @@ static int __init sweep2sleep_init(void)
 		goto err4;
 	}
 	
+	rc = sysfs_create_file(android_touch_kobj, &dev_attr_sweep2sleep_touchboost.attr);
+	if (rc) 
+	{
+		pr_warn(LOGTAG"%s: sysfs_create_file failed for sweep2sleep_touchboost\n", __func__);
+		goto err5;
+	}
+	
 	return 0;
-
+err5:
+	ta_active = NONE;
 err4:
 	unregister_early_suspend(&screen_detect);
 	input_unregister_handler(&s2s_input_handler);
@@ -503,7 +568,6 @@ static void __exit sweep2sleep_exit(void)
 	destroy_workqueue(s2s_input_wq);
 	input_unregister_device(sweep2sleep_pwrdev);
 	input_free_device(sweep2sleep_pwrdev);
-
 	return;
 }
 
