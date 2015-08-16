@@ -246,8 +246,14 @@ static void s2s_input_event(struct input_handle *handle, unsigned int type,
 				set_cpufreq_boost_ya(1);
 		}
 		
+		//if sweep2sleep isn't activated, we don't need to evaluate anything. Reset and break out
 		if(!s2s)
+		{
+			touch_x = 0;
+			touch_y = 0;
 			return;
+		}
+			
 			
 		if(touch_y >= 1910 && touch_y <= 2500)
 		{
@@ -462,7 +468,7 @@ static ssize_t touchboost_store(struct device *dev,
 	return count;
 }
 
-static DEVICE_ATTR(sweep2sleep_touchboost, (S_IWUSR|S_IRUGO),
+static DEVICE_ATTR(touchboost, (S_IWUSR|S_IRUGO),
 	touchboost_show, touchboost_store);
 
 /*****************************************/
@@ -541,7 +547,7 @@ static int __init sweep2sleep_init(void)
 		goto err4;
 	}
 	
-	rc = sysfs_create_file(android_touch_kobj, &dev_attr_sweep2sleep_touchboost.attr);
+	rc = sysfs_create_file(android_touch_kobj, &dev_attr_touchboost.attr);
 	if (rc) 
 	{
 		pr_warn(LOGTAG"%s: sysfs_create_file failed for sweep2sleep_touchboost\n", __func__);
