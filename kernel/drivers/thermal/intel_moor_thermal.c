@@ -578,9 +578,9 @@ long read_systherm2_temp(void)
 	int ret;
 	long cur_temp;
 	struct thermal_zone_device *tzd = tdata->tzd[2];
-	cur_temp=0;
+
 	ret = update_temp(tzd, &cur_temp);
-	printk("[PMIC] systherm2 = %ld\n", cur_temp);
+	//printk("[PMIC] systherm2 = %ld\n", cur_temp);
 	return cur_temp;
 }
 EXPORT_SYMBOL(read_systherm2_temp);
