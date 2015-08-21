@@ -26,10 +26,6 @@
 #include <asm/intel_mid_gpadc.h>
 #include <linux/switch.h>
 
-#ifdef CONFIG_BLX
-#include <linux/blx.h>
-#endif
-
 #define DISABLE_CHARGING_AT_LOW_TEMP false
 #define VWARN1_CFG_REG	0x3C
 #define VPROG2_CFG_REG	0xAD
@@ -684,7 +680,6 @@ static int asus_battery_update_status_no_mutex(int percentage)
 {
         int status;
         int temperature, vbat;
-
         //int flags; //for bq series
         struct battery_info_reply tmp_batt_info;
         u32 cable_status;
@@ -1126,41 +1121,40 @@ handle500_600:
 		}
 #endif
 #endif
-               if (percentage >= 0 && percentage <= 100) {               
-#ifdef CONFIG_BLX
-					if (percentage >= get_charginglimit())
-#else
-					if (percentage == 100)
-#endif
-					{
-							status = POWER_SUPPLY_STATUS_FULL;
-							goto final;
-					}
-					
-					if (percentage == 99) 
-					{
+                if (percentage >= 0 && percentage <= 100) {
+                    switch (percentage) {
+                       case 100:
+                          status = POWER_SUPPLY_STATUS_FULL;
+                          break;
+                       case 99:
 #if defined(CONFIG_A500CG_BATTERY_SMB347)
-                        if (smb347_get_charging_status() == POWER_SUPPLY_STATUS_FULL) {
+                          if (smb347_get_charging_status() == POWER_SUPPLY_STATUS_FULL) {
 #elif defined(CONFIG_SMB1357_CHARGER)
-                        if (smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL) {
+                          if (smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL) {
 #else
-						if(0) {
+			if(0) {
 #endif
-						//check if Full-charged is detected
+                             //check if Full-charged is detected
                              BAT_DBG("Full-charged is detected when in 99%% !\n");
                              status = POWER_SUPPLY_STATUS_FULL;
-                             goto final;
+                          } else {
+                             //smb347_charging_toggle(true);
                           }
-					}
-				} 
-				else 
-					BAT_DBG_E("Incorrect percentage !!!!!\n");
+                          break;
+                       default:
+                          //smb347_charging_toggle(true);
+                          break;
+
+                   }
                 } else {
+                    BAT_DBG_E("Incorrect percentage !!!!!\n");
+                }
+        } else {
                         status = POWER_SUPPLY_STATUS_NOT_CHARGING;
 #ifdef CONFIG_SMB1357_CHARGER
-						aicl_set_flag = 0;
+			aicl_set_flag = 0;
 #endif
-				}
+        }
 
 final:
         if (status == POWER_SUPPLY_STATUS_FULL)
@@ -1274,8 +1268,7 @@ static void asus_battery_get_info_no_mutex(void)
 	BAT_DBG("WA for full-charged issue, full_charged_flag=%d, pre_soc=%d, percentage=%d, cable_status=%d\n", full_charged_flag, pre_soc, tmp_batt_info.percentage, tmp_batt_info.cable_status);
 	if (tmp_batt_info.cable_status == NO_CABLE) {
 		full_charged_flag = 0;
-	}
-	else if(tmp_batt_info.percentage == 100) {
+	}else if(tmp_batt_info.percentage == 100) {
 		if (pre_soc>=99) {
 			tmp_batt_info.status = POWER_SUPPLY_STATUS_FULL;
 			full_charged_flag = 1;

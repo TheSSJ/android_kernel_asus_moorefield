@@ -4127,3 +4127,4 @@ CONFIG_BCMDHD_NVRAM_PATH="/system/etc/wifi/bcmdhd.cal"
 # CONFIG_DHD_USE_SCHED_SCAN is not set
 
 CONFIG_ASYNC_FSYNC=y
+CONFIG_BLX=y
