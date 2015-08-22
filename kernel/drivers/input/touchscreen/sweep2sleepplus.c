@@ -255,7 +255,7 @@ static void s2s_input_event(struct input_handle *handle, unsigned int type,
 		}
 			
 			
-		if(touch_y >= 1910 && touch_y <= 2500)
+		if(touch_y >= 1920 && touch_y <= 2500)
 		{
 			if(debug)
 				pr_info(LOGTAG"Registered touch, x = %d, y = %d\n", touch_x, touch_y);
