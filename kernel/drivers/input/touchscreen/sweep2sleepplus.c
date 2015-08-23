@@ -30,9 +30,9 @@
 #include <linux/input.h>
 #include <linux/hrtimer.h>
 #include <linux/earlysuspend.h>
-#include "ftxxxx_ts.h"
 #include <linux/cpufreq.h>
 
+#define FTXXXX_NAME	"ftxxxx_ts"
 
 /*****************************************/
 /* Module/driver data */
@@ -40,7 +40,7 @@
 
 #define DRIVER_AUTHOR "andip71 (Lord Boeffla), TheSSJ"
 #define DRIVER_DESCRIPTION "Sweep2sleep + Touchboost for Zenfone 2"
-#define DRIVER_VERSION "1.0.1"
+#define DRIVER_VERSION "1.0.2"
 #define LOGTAG "s2s: "
 
 MODULE_AUTHOR(DRIVER_AUTHOR);
@@ -58,6 +58,9 @@ MODULE_LICENSE("GPLv2");
 
 int s2s = 1;
 int touchboost = 1;
+int is_ze550ml = 0;
+int y_boundary = 1920; //y value for ZE551ML
+int x_boundary = 1080; //x value for ZE551ML
 static int debug = 1;
 static int pwrkey_dur = 60;
 static bool scr_suspended;
@@ -69,6 +72,9 @@ static bool touch_y_called = false;
 //First index is BACK, second HOME, third MENU, thus we need 2 items in our array as the last keycheck can be done dynamically
 #define MAXSIZE 2
 static int pressArray[MAXSIZE];
+
+//Size of the area where the capacitive buttons are located
+#define BLACK_AREA 500
 
 static struct input_dev * sweep2sleep_pwrdev;
 static DEFINE_MUTEX(pwrkeyworklock);
@@ -255,17 +261,29 @@ static void s2s_input_event(struct input_handle *handle, unsigned int type,
 		}
 			
 			
-		if(touch_y >= 1920 && touch_y <= 2500)
+		if((touch_y >= y_boundary) && (touch_y <= (y_boundary + BLACK_AREA)))
 		{
 			if(debug)
 				pr_info(LOGTAG"Registered touch, x = %d, y = %d\n", touch_x, touch_y);
-				
-			if(touch_x >= 200 && touch_x <= 300)
-				key_press = KEY_BACK;
-			if(touch_x >= 500 && touch_x <= 600)
-				key_press = KEY_HOME;
-			if(touch_x >= 850 && touch_x <= 975)
-				key_press = KEY_MENU;
+			
+			if(!is_ze550ml) //ZE551ML
+			{
+				if(touch_x >= 200 && touch_x <= 300)
+					key_press = KEY_BACK;
+				if(touch_x >= 500 && touch_x <= 600)
+					key_press = KEY_HOME;
+				if(touch_x >= 850 && touch_x <= 975)
+					key_press = KEY_MENU;
+			}
+			else //if is_ze550ml //ZE550ML, needs more testing
+			{
+				if(touch_x >= 130 && touch_x <= 200)
+					key_press = KEY_BACK;
+				if(touch_x >= 350 && touch_x <= 430)
+					key_press = KEY_HOME;
+				if(touch_x >= 560 && touch_x <= 650)
+					key_press = KEY_MENU;
+			}
 			
 			if(key_press != 0)
 			{
@@ -471,6 +489,40 @@ static ssize_t touchboost_store(struct device *dev,
 static DEVICE_ATTR(touchboost, (S_IWUSR|S_IRUGO),
 	touchboost_show, touchboost_store);
 
+static ssize_t is_ze550ml_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", is_ze550ml);
+}
+
+static ssize_t is_ze550ml_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	unsigned int ret = -EINVAL;
+	int ze550ml = -EINVAL;
+
+	// read values from input buffer
+	ret = sscanf(buf, "%d", &ze550ml);
+
+	if (ret != 1)
+		return -EINVAL;
+		
+	// store if valid data
+	if (ze550ml == 0 || ze550ml == 1)
+		{
+			is_ze550ml = ze550ml;
+			y_boundary = (!is_ze550ml ? 1920 : 1280);
+			x_boundary = (!is_ze550ml ? 1080 : 720);
+		}
+	else
+		pr_warn(LOGTAG"Invalid value, please make sure you enter one of the following\n\nFor ZE551ML: 0\nFor ZE550ML: 1\n");
+
+	return count;
+}
+
+static DEVICE_ATTR(is_ze550ml, (S_IWUSR|S_IRUGO),
+	is_ze550ml_show, is_ze550ml_store);
+
 /*****************************************/
 // Driver init and exit functions
 /*****************************************/
@@ -481,7 +533,7 @@ EXPORT_SYMBOL_GPL(android_touch_kobj);
 static int __init sweep2sleep_init(void)
 {
 	int rc = 0;
-
+	
 	sweep2sleep_pwrdev = input_allocate_device();
 	if (!sweep2sleep_pwrdev) 
 	{
@@ -550,8 +602,15 @@ static int __init sweep2sleep_init(void)
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_touchboost.attr);
 	if (rc) 
 	{
-		pr_warn(LOGTAG"%s: sysfs_create_file failed for sweep2sleep_touchboost\n", __func__);
+		pr_warn(LOGTAG"%s: sysfs_create_file failed for touchboost\n", __func__);
 		goto err5;
+	}
+	
+	rc = sysfs_create_file(android_touch_kobj, &dev_attr_is_ze550ml.attr);
+	if (rc) 
+	{
+		pr_warn(LOGTAG"%s: sysfs_create_file failed for is_ze550ml\n", __func__);
+		goto err4;
 	}
 	
 	return 0;
