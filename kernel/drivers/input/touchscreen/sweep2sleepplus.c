@@ -73,7 +73,7 @@ static bool touch_y_called = false;
 #define MAXSIZE 2
 static int pressArray[MAXSIZE];
 
-//Size of the area where the capacitive buttons are located
+//Size of the area (pixel) where the capacitive buttons are located
 #define BLACK_AREA 500
 
 static struct input_dev * sweep2sleep_pwrdev;
@@ -223,6 +223,8 @@ static void s2s_input_event(struct input_handle *handle, unsigned int type,
 			if(ta_active==YANKACTIVE)
 				set_cpufreq_boost_ya(0);
 		}
+		//as the finger left the contact with the screen, it doesn't count as sweep anymore, therefore reset
+		sweep2sleep_reset();
 		return;
 	}
 	
@@ -599,18 +601,18 @@ static int __init sweep2sleep_init(void)
 		goto err4;
 	}
 	
-	rc = sysfs_create_file(android_touch_kobj, &dev_attr_touchboost.attr);
-	if (rc) 
-	{
-		pr_warn(LOGTAG"%s: sysfs_create_file failed for touchboost\n", __func__);
-		goto err5;
-	}
-	
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_is_ze550ml.attr);
 	if (rc) 
 	{
 		pr_warn(LOGTAG"%s: sysfs_create_file failed for is_ze550ml\n", __func__);
 		goto err4;
+	}
+	
+	rc = sysfs_create_file(android_touch_kobj, &dev_attr_touchboost.attr);
+	if (rc) 
+	{
+		pr_warn(LOGTAG"%s: sysfs_create_file failed for touchboost\n", __func__);
+		goto err5;
 	}
 	
 	return 0;
