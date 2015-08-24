@@ -126,7 +126,12 @@ static int sfi_processor_get_performance_states(struct sfi_processor *pr)
 	int result = 0;
 	int i;
 
+#if 0 //beginnings of OC
+	pr->performance->state_count = sfi_cpufreq_num + 2;
+#else
 	pr->performance->state_count = sfi_cpufreq_num;
+#endif	
+	
 	pr->performance->states =
 	    kmalloc(sizeof(struct sfi_processor_px) * sfi_cpufreq_num,
 		    GFP_KERNEL);
@@ -135,8 +140,42 @@ static int sfi_processor_get_performance_states(struct sfi_processor *pr)
 
 	printk(KERN_INFO "Num p-states %d\n", sfi_cpufreq_num);
 
+
+#if 0 //OC continued
+/*
+ * State [-2]: core_frequency[2500 / 2000] transition_latency[100] control[0x1e59] +84MHz	100	0x102
+ * State [-1]: core_frequency[2416 / 1916] transition_latency[100] control[0x1d57] +83MHz	100	0x103
+ */
+	pr->performance->states[0].core_frequency =
+		sfi_cpufreq_array[0].freq_mhz + 83 + 84;
+	pr->performance->states[0].transition_latency =
+		sfi_cpufreq_array[0].latency;
+	pr->performance->states[0].control =
+		sfi_cpufreq_array[0].ctrl_val + 0x102 + 0x103;
+	pr->performance->states[1].core_frequency =
+		sfi_cpufreq_array[0].freq_mhz + 83;
+	pr->performance->states[1].transition_latency =
+		sfi_cpufreq_array[0].latency;
+	pr->performance->states[1].control =
+		sfi_cpufreq_array[0].ctrl_val + 0x102;
+		
+	for (i = 2; i < sfi_cpufreq_num; i++) {
+		pr->performance->states[i].core_frequency =
+			sfi_cpufreq_array[i-2].freq_mhz;
+		pr->performance->states[i].transition_latency =
+			sfi_cpufreq_array[i-2].latency;
+		pr->performance->states[i].control =
+			sfi_cpufreq_array[i-2].ctrl_val;
+		printk(KERN_INFO "State [%d]: core_frequency[%d] transition_latency[%d] control[0x%x]\n",
+			i,
+			(u32) pr->performance->states[i].core_frequency,
+			(u32) pr->performance->states[i].transition_latency,
+			(u32) pr->performance->states[i].control);
+	}
+#else
 	/* Populate the P-states info from the SFI table here */
 	for (i = 0; i < sfi_cpufreq_num; i++) {
+
 		pr->performance->states[i].core_frequency =
 			sfi_cpufreq_array[i].freq_mhz;
 		pr->performance->states[i].transition_latency =
@@ -149,7 +188,7 @@ static int sfi_processor_get_performance_states(struct sfi_processor *pr)
 			(u32) pr->performance->states[i].transition_latency,
 			(u32) pr->performance->states[i].control);
 	}
-
+#endif
 	return result;
 }
 
