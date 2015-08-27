@@ -202,14 +202,6 @@ config CPU_FREQ_GOV_BIOSHOCK
 	help
 	credits to Jamison904
 
-config CPU_FREQ_GOV_IMPULSE
-	tristate "'impulse' cpufreq policy governor"
-	help
-	'impulse' - This driver adds a dynamic cpufreq policy governor
-	designed for optimized balance between battery and performance.
-
-	If in doubt, say N.
-
 config CPU_FREQ_GOV_THESSJACTIVE
 	tristate "'thessjactive' cpufreq policy governor"
 	depends on CPU_FREQ	
@@ -260,13 +252,6 @@ config CPU_FREQ_GOV_YANKACTIVE
 	The governor is based on interactive with just different default settings
 	and can be achieved using interactive with a script. This is added for
 	simplification purposes for myself.
-
-config CPU_FREQ_GOV_ADAPTIVE
-	tristate "'adaptive' cpufreq policy governor"
-	---help---
-	'adaptive' - This driver adds a dynamic cpufreq policy governor
-	designed for latency-sensitive workloads and also for demanding
-	performance.
 
 config GENERIC_CPUFREQ_CPU0
 	tristate "Generic CPU0 cpufreq driver"
