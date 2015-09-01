@@ -167,7 +167,10 @@ static void get_cpu_sibling_mask(int cpu, struct cpumask *sibling_mask)
 static int sfi_processor_get_performance_states(struct sfi_processor *pr)
 {
 	int result = 0;
+	int last_PState=0;
 	int i;
+
+	last_PState = sfi_cpufreq_num-1;
 
 #ifdef CPU_ATOM_OVERCLOCK
 	sfi_cpufreq_num = sfi_cpufreq_num + 2; //we need +2 states for the OC
@@ -240,12 +243,12 @@ static int sfi_processor_get_performance_states(struct sfi_processor *pr)
 	
 //+State [23]: core_frequency[416] transition_latency[100] control[0x52f] -84MHz	100	0x101
 //+State [24]: core_frequency[333] transition_latency[100] control[0x42e] -83MHz	100	0x101
-	pr->performance->states[sfi_cpufreq_num-2].core_frequency = sfi_cpufreq_array[sfi_cpufreq_num-3].freq_mhz - 84; //416MHz
-	pr->performance->states[sfi_cpufreq_num-2].transition_latency = sfi_cpufreq_array[sfi_cpufreq_num-3].latency;
-	pr->performance->states[sfi_cpufreq_num-2].control = sfi_cpufreq_array[sfi_cpufreq_num-3].ctrl_val - 0x101;
-	pr->performance->states[sfi_cpufreq_num-1].core_frequency = sfi_cpufreq_array[sfi_cpufreq_num-3].freq_mhz - 84 - 83; //333MHz
-	pr->performance->states[sfi_cpufreq_num-1].transition_latency = sfi_cpufreq_array[sfi_cpufreq_num-3].latency;
-	pr->performance->states[sfi_cpufreq_num-1].control = sfi_cpufreq_array[sfi_cpufreq_num-3].ctrl_val - 0x101 - 0x101;	
+	pr->performance->states[sfi_cpufreq_num-2].core_frequency = sfi_cpufreq_array[last_PState].freq_mhz - 84; //416MHz
+	pr->performance->states[sfi_cpufreq_num-2].transition_latency = sfi_cpufreq_array[last_PState].latency;
+	pr->performance->states[sfi_cpufreq_num-2].control = sfi_cpufreq_array[last_PState].ctrl_val - 0x101;
+	pr->performance->states[sfi_cpufreq_num-1].core_frequency = sfi_cpufreq_array[last_PState].freq_mhz - 84 - 83; //333MHz
+	pr->performance->states[sfi_cpufreq_num-1].transition_latency = sfi_cpufreq_array[last_PState].latency;
+	pr->performance->states[sfi_cpufreq_num-1].control = sfi_cpufreq_array[last_PState].ctrl_val - 0x101 - 0x100;	
 #endif
 
 	return result;
@@ -314,7 +317,8 @@ static unsigned extract_freq(u32 msr, struct sfi_cpufreq_data *data)
 
 	msr &= INTEL_MSR_BUSRATIO_MASK;
 	perf = data->sfi_data;
-	unsigned int lowest_freq = data->freq_table[0].frequency;
+	unsigned int lowest_freq;
+	lowest_freq = data->freq_table[0].frequency;
 
 	for (i = 0; data->freq_table[i].frequency != CPUFREQ_TABLE_END; i++) {
 		sfi_ctrl = perf->states[data->freq_table[i].index].control
