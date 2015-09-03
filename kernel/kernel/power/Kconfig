@@ -309,6 +309,25 @@ config PM_GENERIC_DOMAINS
 	bool
 	depends on PM
 
+config WQ_POWER_EFFICIENT
+	bool "Workqueue allocated as UNBOUND (by default) for power efficiency"
+	depends on PM
+	help
+	  Workqueues can be performance or power oriented. For performance we
+	  may want to keep them running on a single cpu, so that it remains
+	  cache hot. For power we can give scheduler the liberty to choose
+	  target cpu for running work handler.
+
+	  Later one (Power oriented WQ) can be achieved if the workqueue is
+	  allocated with WQ_UNBOUND flag. Enabling CONFIG_WQ_POWER_EFFICIENT
+	  will set 'wq_power_efficient' to 'true'. Setting 'power_efficient'
+	  boot param will override value of 'wq_power_efficient' variable. When
+	  'wq_power_efficient' is set to 'true', we will convert
+	  WQ_POWER_EFFICIENT flag to WQ_UNBOUND on wq allocation. And so
+	  scheduler will have the liberty to choose where to run this work.
+
+	  If in doubt, say N.
+
 config PM_GENERIC_DOMAINS_SLEEP
 	def_bool y
 	depends on PM_SLEEP && PM_GENERIC_DOMAINS
