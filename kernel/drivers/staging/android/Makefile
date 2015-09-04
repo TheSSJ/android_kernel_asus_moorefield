@@ -4,7 +4,7 @@ obj-y					+= ion/
 
 obj-$(CONFIG_ANDROID_BINDER_IPC)	+= binder.o
 obj-$(CONFIG_ASHMEM)			+= ashmem.o
-obj-$(CONFIG_ANDROID_LOGGER)		+= logger.o
+obj-$(CONFIG_ANDROID_LOGGER)		+= logger.o logger_interface.o
 obj-$(CONFIG_ANDROID_LOGGER_PTI)	+= logger_pti.o
 obj-$(CONFIG_ANDROID_LOGGER_SVENTX)     += logger_sventx.o
 obj-$(CONFIG_ANDROID_TIMED_OUTPUT)	+= timed_output.o
