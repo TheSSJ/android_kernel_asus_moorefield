@@ -31,6 +31,7 @@
 #include <linux/hrtimer.h>
 #include <linux/earlysuspend.h>
 #include <linux/cpufreq.h>
+#include <linux/HWVersion.h>
 
 #define FTXXXX_NAME	"ftxxxx_ts"
 
@@ -83,6 +84,10 @@ static struct work_struct s2s_input_work;
 
 //touchboost code here
 whichgov ta_active = NONE;
+
+//determination which device is running this kernel
+extern int Read_PROJ_ID(void);
+extern int Read_HW_ID(void);
 
 /*****************************************/
 // Internal functions
@@ -491,40 +496,6 @@ static ssize_t touchboost_store(struct device *dev,
 static DEVICE_ATTR(touchboost, (S_IWUSR|S_IRUGO),
 	touchboost_show, touchboost_store);
 
-static ssize_t is_ze550ml_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	return sprintf(buf, "%d\n", is_ze550ml);
-}
-
-static ssize_t is_ze550ml_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	unsigned int ret = -EINVAL;
-	int ze550ml = -EINVAL;
-
-	// read values from input buffer
-	ret = sscanf(buf, "%d", &ze550ml);
-
-	if (ret != 1)
-		return -EINVAL;
-		
-	// store if valid data
-	if (ze550ml == 0 || ze550ml == 1)
-		{
-			is_ze550ml = ze550ml;
-			y_boundary = (!is_ze550ml ? 1920 : 1280);
-			x_boundary = (!is_ze550ml ? 1080 : 720);
-		}
-	else
-		pr_warn(LOGTAG"Invalid value, please make sure you enter one of the following\n\nFor ZE551ML: 0\nFor ZE550ML: 1\n");
-
-	return count;
-}
-
-static DEVICE_ATTR(is_ze550ml, (S_IWUSR|S_IRUGO),
-	is_ze550ml_show, is_ze550ml_store);
-
 /*****************************************/
 // Driver init and exit functions
 /*****************************************/
@@ -601,18 +572,29 @@ static int __init sweep2sleep_init(void)
 		goto err4;
 	}
 	
-	rc = sysfs_create_file(android_touch_kobj, &dev_attr_is_ze550ml.attr);
+	/*rc = sysfs_create_file(android_touch_kobj, &dev_attr_is_ze550ml.attr);
 	if (rc) 
 	{
 		pr_warn(LOGTAG"%s: sysfs_create_file failed for is_ze550ml\n", __func__);
 		goto err4;
-	}
+	}*/
 	
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_touchboost.attr);
 	if (rc) 
 	{
 		pr_warn(LOGTAG"%s: sysfs_create_file failed for touchboost\n", __func__);
 		goto err5;
+	}
+	
+	if (Read_HW_ID() == HW_ID_MP)
+	{
+		if (Read_PROJ_ID() == PROJ_ID_ZE550ML)
+			is_ze550ml = 1;
+		else
+			is_ze550ml = 0;
+		
+		y_boundary = (!is_ze550ml ? 1920 : 1280);
+		x_boundary = (!is_ze550ml ? 1080 : 720);
 	}
 	
 	return 0;

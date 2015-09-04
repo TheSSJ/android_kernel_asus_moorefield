@@ -684,8 +684,7 @@ static int asus_battery_update_status_no_mutex(int percentage)
 {
         int status;
         int temperature, vbat;
-		int tmpbatt;
-        //int flags; //for bq series
+		
         struct battery_info_reply tmp_batt_info;
         u32 cable_status;
 
@@ -695,15 +694,15 @@ static int asus_battery_update_status_no_mutex(int percentage)
 
         if (cable_status == USB_ADAPTER || cable_status == USB_PC) {
                 status = POWER_SUPPLY_STATUS_CHARGING;
-#ifdef CONFIG_ASUS_FACTORY_MODE
-                if (percentage >= 60 && tmp_batt_info.eng_charging_limit) {
-                        BAT_DBG("in fac mode and capasity > 60 percent\n");
+#ifdef CONFIG_BLX
+                if (percentage >= get_charginglimit() && get_charginglimit() <= 98) {
 #if defined(CONFIG_A500CG_BATTERY_SMB347)
 			smb347_charging_toggle(false);
 #elif defined(CONFIG_SMB1357_CHARGER)
 			smb1357_charging_toggle(false);
 #endif
-                        status = POWER_SUPPLY_STATUS_DISCHARGING;
+						//Fake the battery to be full now and exit here
+                        status = POWER_SUPPLY_STATUS_FULL;
                         goto final;
                 }
 #endif
@@ -1828,33 +1827,12 @@ int asus_battery_init(
         batt_info.critical_polling_time = critical_polling_time > (3*HZ) ? critical_polling_time : BATTERY_CRITICAL_POLL_TIME;
         batt_info.critical_polling_time = BATTERY_CRITICAL_POLL_TIME;
         batt_info.percentage = 50;
-/* chris20121116: do not initialize it here */
-#if 0
-        batt_info.cable_status = NO_CABLE;
-#endif
         batt_info.batt_temp = 250;
         batt_info.present = 1;
         batt_info.test_flag = test_flag;
         if (test_flag)
                 BAT_DBG("test_flag: 0x%08X\n", test_flag);
-#if 0
-        /* Allocate ADC Channels */
-	batt_info.gpadc_handle =
-		intel_mid_gpadc_alloc(CLT_BATT_NUM_GPADC_SENSORS,
-				  CLT_GPADC_BPRESIST_CHNUM | CH_NEED_VCALIB |
-				  CH_NEED_VREF);
-        if (batt_info.gpadc_handle == NULL) {
-              BAT_DBG_E("ADC allocation failed: Check if ADC driver came up \n");
-        }
 
-        ret = intel_mid_gpadc_sample(batt_info.gpadc_handle,
-				CLT_GPADC_BPTHERM_SAMPLE_COUNT,
-				&batt_info.gpadc_resistance_val);
-	if (ret) {
-		BAT_DBG_E("adc driver api returned error(%d)\n", ret);
-	}
-        BAT_DBG("battery resistance = %d\n", batt_info.gpadc_resistance_val);
-#endif
         mutex_unlock(&batt_info_mutex);
 
         if (test_flag & TEST_INFO_NO_REG_POWER) {
