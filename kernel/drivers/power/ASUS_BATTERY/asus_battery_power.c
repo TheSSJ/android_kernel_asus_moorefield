@@ -684,7 +684,7 @@ static int asus_battery_update_status_no_mutex(int percentage)
 {
         int status;
         int temperature, vbat;
-
+		int tmpbatt;
         //int flags; //for bq series
         struct battery_info_reply tmp_batt_info;
         u32 cable_status;
@@ -815,11 +815,21 @@ static int asus_battery_update_status_no_mutex(int percentage)
 							status = POWER_SUPPLY_STATUS_NOT_QUICK_CHARGING;
 					}
 				}
+				#ifdef CONFIG_BLX
+				if(get_charginglimit() >= 99)
+				{
+					if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
+						smb1357_charging_toggle(false);
+						smb1357_charging_toggle(true);
+					}
+				}
+				#else
 				/*recharge*/
 				if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
 					smb1357_charging_toggle(false);
 					smb1357_charging_toggle(true);
 				}
+				#endif
 			}
 			if( temperature >=100 && temperature <200){
 				if(temp_type<=IN_15_100&&temperature<130){
@@ -845,11 +855,21 @@ static int asus_battery_update_status_no_mutex(int percentage)
 					smb1357_charging_toggle(true);
 					temp_type = IN_100_200;
 				}
+				#ifdef CONFIG_BLX
+				if(get_charginglimit() >= 99)
+				{
+					if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
+						smb1357_charging_toggle(false);
+						smb1357_charging_toggle(true);
+					}
+				}
+				#else
 				/*recharge*/
 				if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
 					smb1357_charging_toggle(false);
 					smb1357_charging_toggle(true);
 				}
+				#endif
 			}
 			if( temperature >=200 && temperature <400){
 				if(temp_type<=IN_100_200&&temperature<230){
@@ -890,11 +910,21 @@ static int asus_battery_update_status_no_mutex(int percentage)
 					smb1357_charging_toggle(true);
 					temp_type = IN_200_400;
 				}
+				#ifdef CONFIG_BLX
+				if(get_charginglimit() >= 99)
+				{
+					if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
+						smb1357_charging_toggle(false);
+						smb1357_charging_toggle(true);
+					}
+				}
+				#else
 				/*recharge*/
 				if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
 					smb1357_charging_toggle(false);
 					smb1357_charging_toggle(true);
 				}
+				#endif
 			}
 			if( temperature >=400 && temperature <450){
 				if(temp_type>=IN_450_500&&temperature>420){
@@ -931,11 +961,22 @@ handle400_450:
 					smb1357_charging_toggle(true);
 					temp_type = IN_400_450;
 				}
+
+				#ifdef CONFIG_BLX
+				if(get_charginglimit() >= 99)
+				{
+					if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
+						smb1357_charging_toggle(false);
+						smb1357_charging_toggle(true);
+					}
+				}
+				#else
 				/*recharge*/
 				if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
 					smb1357_charging_toggle(false);
 					smb1357_charging_toggle(true);
 				}
+				#endif
 			}
 			if( temperature >=450 && temperature <500){
 				if(temp_type>=IN_500_600&&temperature>470){
@@ -972,11 +1013,21 @@ handle450_500:
 					smb1357_charging_toggle(true);
 					temp_type = IN_450_500;
 				}
+								#ifdef CONFIG_BLX
+				if(get_charginglimit() >= 99)
+				{
+					if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
+						smb1357_charging_toggle(false);
+						smb1357_charging_toggle(true);
+					}
+				}
+				#else
 				/*recharge*/
 				if((percentage <= 98)&&(smb1357_get_charging_status() == POWER_SUPPLY_STATUS_FULL)) {
 					smb1357_charging_toggle(false);
 					smb1357_charging_toggle(true);
 				}
+				#endif
 			}
 			if(temperature >=500 && temperature <600){
 handle500_600:
@@ -1275,15 +1326,32 @@ static void asus_battery_get_info_no_mutex(void)
 	if (tmp_batt_info.cable_status == NO_CABLE) {
 		full_charged_flag = 0;
 	}
-	else if(tmp_batt_info.percentage == 100) {
-		if (pre_soc>=99) {
+	#ifdef CONFIG_BLX
+	else if(tmp_batt_info.percentage >= get_charginglimit()) {
+		tmp = (get_charginglimit() == 100 ? 99 : get_charginglimit()); //We need to catch the case if BLX is just set to 100
+		if(pre_soc >= tmp)
+		{
 			tmp_batt_info.status = POWER_SUPPLY_STATUS_FULL;
 			full_charged_flag = 1;
-		} else {
-			full_charged_flag = 0;
 		}
+	#else
+	else if(tmp_batt_info.percentage == 100) {
+		if (pre_soc>=99) 
+		{
+			tmp_batt_info.status = POWER_SUPPLY_STATUS_FULL;
+			full_charged_flag = 1;
+		}
+	#endif 
+		else
+			full_charged_flag = 0;
+		
 	}
+#ifdef CONFIG_BLX
+	tmp = (get_charginglimit() >= 99 ? 98 : get_charginglimit()); //if BLX is set to 99 or 100
+	if ((full_charged_flag==1)&&(tmp_batt_info.cable_status ==USB_ADAPTER)&&(tmp_batt_info.percentage>=tmp)) {
+#else
 	if ((full_charged_flag==1)&&(tmp_batt_info.cable_status ==USB_ADAPTER)&&(tmp_batt_info.percentage>=98)) {
+#endif
 		tmp_batt_info.percentage = 100;
 		tmp_batt_info.status = POWER_SUPPLY_STATUS_FULL;
 	}
