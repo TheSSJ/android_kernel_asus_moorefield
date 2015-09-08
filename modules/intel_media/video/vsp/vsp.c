@@ -1163,7 +1163,6 @@ void vsp_rm_context(struct drm_device *dev, struct file *filp, int ctx_type)
 	}
 
 	if (VAEntrypointEncSlice == ctx_type && filp != vsp_priv->vp8_filp[3]) {
-		vsp_priv->context_vp8_num--;
 		mutex_lock(&vsp_priv->vsp_mutex);
 		if (vsp_priv->vsp_state == VSP_STATE_SUSPEND) {
 			tmp = vsp_resume_function(dev_priv);
@@ -1206,7 +1205,9 @@ void vsp_rm_context(struct drm_device *dev, struct file *filp, int ctx_type)
 		while (vsp_priv->vp8_cmd_num > 0 && count++ < 20000) {
 			PSB_UDELAY(6);
 		}
-
+		
+		vsp_priv->context_vp8_num--;
+		
 		if (count == 20000) {
 			DRM_ERROR("Failed to handle sigint event\n");
 		}
