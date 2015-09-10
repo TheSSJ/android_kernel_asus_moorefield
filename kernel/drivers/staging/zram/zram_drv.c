@@ -15,9 +15,9 @@
 #define KMSG_COMPONENT "zram"
 #define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
 
-//#ifdef CONFIG_ZRAM_DEBUG
+#ifdef CONFIG_ZRAM_DEBUG
 #define DEBUG
-//#endif
+#endif
 
 //2 to the power of 15, see csnappy.h
 #define SNAPPY_NEEDED_MEM 32768
