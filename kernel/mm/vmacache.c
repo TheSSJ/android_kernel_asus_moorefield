@@ -28,7 +28,7 @@ void vmacache_flush_all(struct mm_struct *mm)
 		return;
 
 	rcu_read_lock();
-	for_each_process_thread(g, p) {
+	do_each_thread(g, p) {
 		/*
 		 * Only flush the vmacache pointers as the
 		 * mm seqnum is already set and curr's will
@@ -37,7 +37,7 @@ void vmacache_flush_all(struct mm_struct *mm)
 		 */
 		if (mm == p->mm)
 			vmacache_flush(p);
-	}
+	} while_each_thread(g, p);
 	rcu_read_unlock();
 }
 
