@@ -52,7 +52,7 @@ csnappy_compress_fragment(
  *
  * "*out_compressed_length" is set to the length of the compressed output.
  */
-void
+int
 csnappy_compress(
 	const char *input,
 	uint32_t input_length,

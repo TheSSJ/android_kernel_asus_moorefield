@@ -453,7 +453,7 @@ csnappy_max_compressed_length(uint32_t source_len)
 EXPORT_SYMBOL(csnappy_max_compressed_length);
 #endif
 
-void
+int
 csnappy_compress(
 	const char *input,
 	uint32_t input_length,
@@ -488,6 +488,7 @@ csnappy_compress(
 		input += num_to_read;
 	}
 	*compressed_length = written;
+	return (*compressed_length >= 0 ? CSNAPPY_E_OK : CSNAPPY_E_DATA_MALFORMED);
 }
 #if defined(__KERNEL__) && !defined(STATIC)
 EXPORT_SYMBOL(csnappy_compress);
