@@ -170,9 +170,8 @@ static ssize_t backlight_store_brightness(struct device *dev,
 			rc = -EINVAL;
 		else {
 			if(brightness <= 100) //begin to scale down when 100 or less is reached
-			{
 				brightness = brightness - (SYSTEM_SET_BRIGHTNESS-min_brightness); //otherwise "stretch" to min brightness
-			}	
+			
 			pr_debug("set brightness to %lu\n", brightness);
 			bd->props.brightness = brightness;
 			backlight_update_status(bd);
@@ -239,7 +238,7 @@ static ssize_t backlight_store_min_brightness(struct device *dev,
 		update_brightness(bd);
 	}
 	else
-		pr_debug("Invalid minimum brightness");
+		pr_debug("Invalid minimum brightness, allowed values are 2-15\n");
 	
 	return count;
 }
@@ -249,16 +248,26 @@ static void update_brightness(struct backlight_device *bd)
 	unsigned int brightness;
 	mutex_lock(&bd->ops_lock);
 	if (bd->ops) {
-			brightness = bd->props.brightness;
-			if(brightness < min_brightness)
-				brightness = min_brightness;
-			else
-				goto out;
-			
-			pr_debug("set brightness to %lu\n", brightness);
-			bd->props.brightness = brightness;
-			backlight_update_status(bd);
+		brightness = bd->props.brightness;
+		
+		if(brightness < min_brightness) //in case min_brightness was increased and is above current brightness
+		{
+			brightness = min_brightness;
+			goto doit;
+		}
+		
+		if (brightness <= SYSTEM_SET_BRIGHTNESS) //else brightness is set to 15 or below, then recalculate
+		{
+			brightness = (SYSTEM_SET_BRIGHTNESS - min_brightness);
+			goto doit;	
+		}			
 	}
+	goto out;
+
+doit:
+	pr_debug("set brightness to %lu\n", brightness);
+	bd->props.brightness = brightness;
+	backlight_update_status(bd);
 	mutex_unlock(&bd->ops_lock);
 	backlight_generate_event(bd, BACKLIGHT_UPDATE_SYSFS);
 	return;
