@@ -983,7 +983,10 @@ static int otm1284a_vid_set_brightness(struct mdfld_dsi_config *dsi_config,
 #ifdef CONFIG_BACKLIGHT_RT4532
 	rt4532_brightness_set(level);
 #else
-
+	/* Re-assign the minimum brightness value to 2 */
+	//if (level < 2)
+	//	level = 2;
+	
 	reg_level = ~level & 0xFF;
 	pwmctrl.part.pwmswupdate = 0x1;
 	pwmctrl.part.pwmbu = PWM_BASE_UNIT;

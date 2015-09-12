@@ -17,21 +17,15 @@
 #include <linux/fb.h>
 #include <linux/slab.h>
 
-#define SYSTEM_SET_BRIGHTNESS 15 //Asus stock is using 15% as minimum
-
 #ifdef CONFIG_PMAC_BACKLIGHT
 #include <asm/backlight.h>
 #endif
-
-static int min_brightness=2;
 
 static const char *const backlight_types[] = {
 	[BACKLIGHT_RAW] = "raw",
 	[BACKLIGHT_PLATFORM] = "platform",
 	[BACKLIGHT_FIRMWARE] = "firmware",
 };
-
-static void update_brightness(struct backlight_device *bd);
 
 #if defined(CONFIG_FB) || (defined(CONFIG_FB_MODULE) && \
 			   defined(CONFIG_BACKLIGHT_CLASS_DEVICE_MODULE))
@@ -169,10 +163,10 @@ static ssize_t backlight_store_brightness(struct device *dev,
 		if (brightness > bd->props.max_brightness)
 			rc = -EINVAL;
 		else {
-			if(brightness <= 100) //begin to scale down when 100 or less is reached
-				brightness = brightness - (SYSTEM_SET_BRIGHTNESS-min_brightness); //otherwise "stretch" to min brightness
-			if(brightness < min_brightness)
-				brightness = min_brightness;
+			if(brightness <= 100) //leave the possibility to set the max value
+				{
+					brightness = (brightness >= 15 ? brightness-13 : 2); //otherwise "stretch" min brightness to 2%
+				}
 			pr_debug("set brightness to %lu\n", brightness);
 			bd->props.brightness = brightness;
 			backlight_update_status(bd);
@@ -214,69 +208,6 @@ static ssize_t backlight_show_actual_brightness(struct device *dev,
 	mutex_unlock(&bd->ops_lock);
 
 	return rc;
-}
-
-static ssize_t backlight_show_min_brightness(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	return sprintf(buf, "%d\n", min_brightness);
-}
-
-static ssize_t backlight_store_min_brightness(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	int rc;
-	struct backlight_device *bd = to_backlight_device(dev);
-	unsigned long m_brightness;
-
-	rc = kstrtoul(buf, 0, &m_brightness);
-	if (rc)
-		return rc;
-	
-	if(m_brightness > 1 && m_brightness <= 15)
-	{
-		min_brightness = m_brightness; //value is within range
-		update_brightness(bd);
-	}
-	else
-		pr_debug("Invalid minimum brightness, allowed values are 2-15\n");
-	
-	return count;
-}
-
-static void update_brightness(struct backlight_device *bd)
-{
-	unsigned int brightness;
-	mutex_lock(&bd->ops_lock);
-	if (bd->ops) {
-		brightness = bd->props.brightness;
-		
-		if(brightness < min_brightness) //in case min_brightness was increased and is above current brightness
-		{
-			brightness = min_brightness;
-			goto doit;
-		}
-		
-		if (brightness <= SYSTEM_SET_BRIGHTNESS) //else brightness is set to 15 or below, then recalculate
-		{
-			brightness = (SYSTEM_SET_BRIGHTNESS - min_brightness);
-			if(brightness < min_brightness)
-				brightness = min_brightness;
-			goto doit;	
-		}			
-	}
-	goto out;
-
-doit:
-	pr_debug("set brightness to %lu\n", brightness);
-	bd->props.brightness = brightness;
-	backlight_update_status(bd);
-	mutex_unlock(&bd->ops_lock);
-	backlight_generate_event(bd, BACKLIGHT_UPDATE_SYSFS);
-	return;
-out:
-	mutex_unlock(&bd->ops_lock);
-	return;
 }
 
 static struct class *backlight_class;
@@ -323,7 +254,6 @@ static struct device_attribute bl_device_attributes[] = {
 		     NULL),
 	__ATTR(max_brightness, 0444, backlight_show_max_brightness, NULL),
 	__ATTR(type, 0444, backlight_show_type, NULL),
-	__ATTR(min_brightness, 0644, backlight_show_min_brightness, backlight_store_min_brightness),
 	__ATTR_NULL,
 };
 
