@@ -171,7 +171,8 @@ static ssize_t backlight_store_brightness(struct device *dev,
 		else {
 			if(brightness <= 100) //begin to scale down when 100 or less is reached
 				brightness = brightness - (SYSTEM_SET_BRIGHTNESS-min_brightness); //otherwise "stretch" to min brightness
-			
+			if(brightness < min_brightness)
+				brightness = min_brightness;
 			pr_debug("set brightness to %lu\n", brightness);
 			bd->props.brightness = brightness;
 			backlight_update_status(bd);
@@ -259,6 +260,8 @@ static void update_brightness(struct backlight_device *bd)
 		if (brightness <= SYSTEM_SET_BRIGHTNESS) //else brightness is set to 15 or below, then recalculate
 		{
 			brightness = (SYSTEM_SET_BRIGHTNESS - min_brightness);
+			if(brightness < min_brightness)
+				brightness = min_brightness;
 			goto doit;	
 		}			
 	}
