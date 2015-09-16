@@ -278,6 +278,8 @@ static int parse_options(struct super_block *sb, char *options)
 		int token;
 		if (!*p)
 			continue;
+		if(!strcmp(p, "nls=utf8")) 
+			continue; // unsupported option used in ZF2, don't stop loading.
 		/*
 		 * Initialize args struct so we know whether arg was
 		 * found; some options take optional arguments.
