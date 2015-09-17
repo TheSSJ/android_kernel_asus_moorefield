@@ -152,7 +152,7 @@ enum flashnode_torch_current{
 };
 
 
-int inline flashnode_mapping_torch_intensity(int light_intensity_percentage){
+static int inline flashnode_mapping_torch_intensity(int light_intensity_percentage){
     int ret;
     ret = FLASHNODE_TORCH_CURRENT_25MA;
     if(light_intensity_percentage > 10)
