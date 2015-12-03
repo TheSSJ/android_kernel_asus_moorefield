@@ -98,7 +98,7 @@ static int sfi_cpufreq_num;
 static u32 sfi_cpu_num;
 static bool battlow;
 
-#define CPU_ATOM_OVERCLOCK 0
+//#define CPU_ATOM_OVERCLOCK 
 #define CPU_ATOM_UNDERCLOCK
 
 #define SFI_FREQ_MAX		32
